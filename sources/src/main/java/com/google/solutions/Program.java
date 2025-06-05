@@ -1,5 +1,6 @@
 package com.google.solutions;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 public class Program {
@@ -7,7 +8,7 @@ public class Program {
    * Entry point, typically invoked using maven or by running
    * <c>java -jar</c>.
    */
-  public static void main(String[] args) {
+  public static void main(String[] args) throws IOException {
     var action = Arrays.stream(args).findFirst().orElse("");
     switch (action) {
       case "client":
@@ -20,6 +21,7 @@ public class Program {
 
       case "server":
         System.out.println("Running as server");
+        new Server(8080).start();
         return;
 
       default:
