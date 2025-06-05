@@ -21,7 +21,7 @@ public class Program {
 
       case "server":
         System.out.println("Running as server");
-        new Server(8080).start();
+        new Server(8080, 10).start();
         return;
 
       default:
