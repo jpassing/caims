@@ -24,7 +24,7 @@ public class Program {
    * Entry point, typically invoked using maven or by running
    * <c>java -jar</c>.
    */
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) throws Exception {
     var action = Arrays.stream(args).findFirst().orElse("");
     switch (action) {
       case "client":

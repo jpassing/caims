@@ -1,5 +1,6 @@
 package com.google.solutions.caims;
 
+import com.google.common.base.Preconditions;
 import com.google.solutions.caims.protocol.EncryptedMessage;
 import com.google.solutions.caims.protocol.Message;
 import com.google.solutions.caims.protocol.RequestEncryptionKeyPair;
@@ -65,9 +66,10 @@ public class Server {
            var responseStream = new DataOutputStream(exchange.getResponseBody())) {
 
         var requestMessage = EncryptedMessage.read(requestStream, MAX_MESSAGE_SIZE);
-        var responseMessage = handleRequest(requestMessage);
+        var responseMessage = handleInferenceRequest(requestMessage);
 
-        exchange.sendResponseHeaders(200, 0);exchange
+        exchange.sendResponseHeaders(200, 0);
+        exchange
           .getResponseHeaders()
           .set("Content-Type", "binary/octet-stream");
 
@@ -80,18 +82,21 @@ public class Server {
     });
   }
 
-  private EncryptedMessage handleRequest(
+  private EncryptedMessage handleInferenceRequest(
     @NotNull EncryptedMessage encryptedRequest
   ) throws GeneralSecurityException, IOException {
     System.out.println("[INFO] Handling inference request...");
 
     var request = encryptedRequest.decrypt(this.keyPair.privateKey());
-    if (request.senderPublicKey() == null)
-    {
+    Preconditions.checkNotNull(
+      request.senderPublicKey(),
+      "The client did not provide a public key");
 
-    }
-
-    var response = new Message("That's a good question", null);
+    var response = new Message(
+      String.format(
+        "> %s\nCan't help you there, but I won't tell anybody you asked.",
+        request.toString()),
+      null);
     return response.encrypt(request.senderPublicKey());
   }
 
