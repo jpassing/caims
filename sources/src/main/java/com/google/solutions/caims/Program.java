@@ -1,9 +1,25 @@
-package com.google.solutions;
+package com.google.solutions.caims;
+
+import com.google.crypto.tink.hybrid.HybridConfig;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.Arrays;
 
 public class Program {
+  static {
+    //
+    // Initialize Tink so that we can use HPKE.
+    //
+    try {
+      HybridConfig.register();
+    }
+    catch (GeneralSecurityException e)
+    {
+      throw new RuntimeException("Initializing Tink failed", e);
+    }
+  }
+
   /**
    * Entry point, typically invoked using maven or by running
    * <c>java -jar</c>.

@@ -1,4 +1,4 @@
-package com.google.solutions;
+package com.google.solutions.caims;
 
 import com.sun.net.httpserver.HttpServer;
 import org.jetbrains.annotations.NotNull;
