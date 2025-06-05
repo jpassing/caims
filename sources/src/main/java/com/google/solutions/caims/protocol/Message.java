@@ -3,7 +3,9 @@ package com.google.solutions.caims.protocol;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.nio.charset.StandardCharsets;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.security.GeneralSecurityException;
 
 /**
@@ -27,7 +29,7 @@ public class Message {
   /**
    * Message body, in clear text.
    */
-  private final @NotNull byte[] body;
+  private final @NotNull String body;
 
   /**
    * Public key of the sender, only relevant if the message denotes
@@ -36,18 +38,16 @@ public class Message {
   private final @Nullable RequestEncryptionKeyPair.PublicKey senderPublicKey;
 
   public Message(
-    @NotNull byte[] body,
+    @NotNull String body,
     @Nullable RequestEncryptionKeyPair.PublicKey senderPublicKey
   ) {
     this.body = body;
     this.senderPublicKey = senderPublicKey;
   }
 
-  public Message(
-    @NotNull String body,
-    @Nullable RequestEncryptionKeyPair.PublicKey senderPublicKey
-  ) {
-    this(StandardCharsets.UTF_8.encode(body).array(), senderPublicKey);
+  @Override
+  public String toString() {
+    return this.body;
   }
 
   public RequestEncryptionKeyPair.PublicKey senderPublicKey() {
@@ -59,26 +59,25 @@ public class Message {
    */
   public @NotNull EncryptedMessage encrypt(
     @NotNull RequestEncryptionKeyPair.PublicKey recipientPublicKey
-  ) throws GeneralSecurityException {
-    //
-    // If this message denotes a request, then we need to make sure that
-    // the recipient gets the sender's public key so that it can use that
-    // to encrypt the response message.
-    //
-    // There are two ways we could pass the public key:
-    //
-    // 1. as part of the body (i.e., encrypted)
-    // 2. as associated data (i.e., clear-text but authenticated)
-    //
-    // Because the public key isn't confidential, option (2) is good
-    // enough, so that's what we use here.
-    //
+  ) throws GeneralSecurityException, IOException {
 
-    var serializedSenderKey = this.senderPublicKey == null
-      ? null
-      : this.senderPublicKey.toBinaryFormat();
+    try (var buffer = new ByteArrayOutputStream())
+    {
+      try (var stream = new DataOutputStream(buffer)) {
+        stream.writeUTF(this.body);
 
-    return new EncryptedMessage(
-      recipientPublicKey.encrypt(this.body, serializedSenderKey));
+        //
+        // If this message denotes a request, then we need to make sure that
+        // the recipient gets the sender's public key so that it can use that
+        // to encrypt the response message.
+        //
+        if (this.senderPublicKey != null) {
+          this.senderPublicKey.write(stream);
+        }
+      }
+
+      var cipherText = recipientPublicKey.encrypt(buffer.toByteArray());
+      return new EncryptedMessage(cipherText);
+    }
   }
 }

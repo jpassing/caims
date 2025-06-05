@@ -4,8 +4,8 @@ import com.google.crypto.tink.*;
 import com.google.crypto.tink.hybrid.HybridKeyTemplates;
 import com.google.crypto.tink.proto.KeyTemplate;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import java.io.*;
 import java.security.GeneralSecurityException;
 
 /**
@@ -43,7 +43,10 @@ public class RequestEncryptionKeyPair {
   // Constructor and factory methods.
   //---------------------------------------------------------------------------
 
-  private RequestEncryptionKeyPair(@NotNull PrivateKey privateKey, @NotNull PublicKey publicKey) {
+  private RequestEncryptionKeyPair(
+    @NotNull PrivateKey privateKey,
+    @NotNull PublicKey publicKey
+  ) {
     this.publicKey = publicKey;
     this.privateKey = privateKey;
   }
@@ -58,7 +61,6 @@ public class RequestEncryptionKeyPair {
       new PrivateKey(handle),
       new PublicKey(handle.getPublicKeysetHandle()));
   }
-
 
   //---------------------------------------------------------------------------
   // Inner classes.
@@ -86,19 +88,43 @@ public class RequestEncryptionKeyPair {
      * optionally a piece of associated data.
      */
     public @NotNull byte[] encrypt(
-      @NotNull byte[] clearText,
-      @Nullable byte[] associatedData
+      @NotNull byte[] clearText
     ) throws GeneralSecurityException {
       return this.handle
         .getPrimitive(RegistryConfiguration.get(), HybridEncrypt.class)
-        .encrypt(clearText, associatedData);
+        .encrypt(clearText, null);
     }
 
     /**
-     * Serialize using Tink's binary format.
+     * Serialize key using Tink's native format and write it to a stream.
      */
-    public @NotNull byte[] toBinaryFormat() throws GeneralSecurityException {
-      return TinkProtoKeysetFormat.serializeKeysetWithoutSecret(this.handle);
+    static @NotNull PublicKey read(
+      @NotNull DataInputStream stream
+    ) throws GeneralSecurityException, IOException {
+      var size = stream.readInt();
+      if (size == 0) {
+        throw new IOException("The stream does not contain a valid key");
+      }
+
+      var keySet = TinkProtoKeysetFormat.parseKeysetWithoutSecret(stream.readNBytes(size));
+      return new PublicKey(keySet);
+    }
+
+    /**
+     * Read a serialized key from a stream.
+     */
+    void write(
+      @NotNull DataOutputStream stream
+    ) throws GeneralSecurityException, IOException {
+      var serialized = TinkProtoKeysetFormat.serializeKeysetWithoutSecret(this.handle);
+      stream.writeInt(serialized.length);
+      stream.write(serialized);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      return obj instanceof PublicKey other &&
+        this.handle.equalsKeyset(other.handle);
     }
   }
 
@@ -117,12 +143,11 @@ public class RequestEncryptionKeyPair {
      * optionally a piece of associated data.
      */
     public @NotNull  byte[] decrypt(
-      @NotNull byte[] cipherText,
-      @Nullable byte[] associatedData
+      @NotNull byte[] cipherText
     ) throws GeneralSecurityException {
       return this.handle
         .getPrimitive(RegistryConfiguration.get(), HybridDecrypt.class)
-        .decrypt(cipherText, associatedData);
+        .decrypt(cipherText, null);
     }
   }
 }

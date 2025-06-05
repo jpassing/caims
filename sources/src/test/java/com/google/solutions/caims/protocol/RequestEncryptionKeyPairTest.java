@@ -4,7 +4,10 @@ import com.google.crypto.tink.hybrid.EciesParameters;
 import com.google.crypto.tink.hybrid.HybridConfig;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 
@@ -40,38 +43,83 @@ public class RequestEncryptionKeyPairTest {
   }
 
   //---------------------------------------------------------------------------
-  // encrypt.
+  // publicKey.
   //---------------------------------------------------------------------------
 
   @Test
-  public void encrypt() throws Exception {
+  public void publicKey_encrypt() throws Exception {
     var pair = RequestEncryptionKeyPair.generate();
 
     var clearText = "test".getBytes(StandardCharsets.US_ASCII);
     var cipherText = pair
       .publicKey()
-      .encrypt(clearText, null);
+      .encrypt(clearText);
 
     var decrypted = pair
       .privateKey()
-      .decrypt(cipherText, null);
+      .decrypt(cipherText);
 
     assertArrayEquals(clearText, decrypted);
   }
 
   @Test
-  public void encrypt_whenAssociatedDataDoesNotMatch() throws Exception {
+  public void publicKey_write() throws Exception {
+    try (var buffer = new ByteArrayOutputStream();
+         var stream = new DataOutputStream(buffer)) {
+      RequestEncryptionKeyPair
+        .generate()
+        .publicKey()
+        .write(stream);
+
+      assertNotEquals(0, buffer.size());
+    }
+  }
+
+  @Test
+  public void publicKey_read() throws Exception {
+    try (var buffer = new ByteArrayOutputStream()) {
+      try (var stream = new DataOutputStream(buffer)) {
+        RequestEncryptionKeyPair
+          .generate()
+          .publicKey()
+          .write(stream);
+      }
+
+      try (var stream = new DataInputStream(new ByteArrayInputStream(buffer.toByteArray()))) {
+        var publicKey = RequestEncryptionKeyPair.PublicKey.read(stream);
+
+        assertNotNull(publicKey);
+      }
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {0, 1, 3})
+  public void publicKey_read_whenDataInvalid(int size) throws Exception {
+    try (var buffer = new ByteArrayOutputStream();
+         var stream = new DataInputStream(new ByteArrayInputStream(new byte[size]))) {
+      assertThrows(
+        IOException.class,
+        () -> RequestEncryptionKeyPair.PublicKey.read(stream));
+    }
+  }
+  //---------------------------------------------------------------------------
+  // privateKey.
+  //---------------------------------------------------------------------------
+
+  @Test
+  public void privateKey_decrypt_whenKeyDoesNotMatch() throws Exception {
     var pair = RequestEncryptionKeyPair.generate();
 
     var clearText = "test".getBytes(StandardCharsets.US_ASCII);
     var cipherText = pair
       .publicKey()
-      .encrypt(clearText, "associated-data".getBytes(StandardCharsets.US_ASCII));
+      .encrypt(clearText);
 
     assertThrows(
       GeneralSecurityException.class,
-      () -> pair
+      () -> RequestEncryptionKeyPair.generate()
         .privateKey()
-        .decrypt(cipherText, "wrong-data".getBytes(StandardCharsets.US_ASCII)));
+        .decrypt(cipherText));
   }
 }

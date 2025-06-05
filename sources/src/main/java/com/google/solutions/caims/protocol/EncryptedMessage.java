@@ -2,8 +2,8 @@ package com.google.solutions.caims.protocol;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
+import java.security.GeneralSecurityException;
 
 /**
  * An encrypted message that can only be decrypted by the intended
@@ -13,29 +13,50 @@ public class EncryptedMessage {
   /**
    * Message body, encrypted.
    */
-  private final @NotNull byte[] body;
+  private final @NotNull byte[] cipherText;
 
-  EncryptedMessage(@NotNull byte[] body) {
-    this.body = body;
+  EncryptedMessage(@NotNull byte[] cipherText) {
+    this.cipherText = cipherText;
   }
 
   /**
-   * Read encrypted request from a raw stream.
+   * Read encrypted message from a stream.
    */
-  public static @NotNull Message read(
-    @NotNull InputStream stream,
+  public static @NotNull EncryptedMessage read(
+    @NotNull DataInputStream stream,
     int maxSize
-  ) {
-    throw new RuntimeException("NIY");
+  ) throws IOException {
+    var length = stream.readInt();
+    if (length == 0 || length > maxSize) {
+      throw new IOException("The stream does not contain a valid message");
+    }
+
+    return new EncryptedMessage(stream.readNBytes(length));
   }
 
-  public void write(@NotNull OutputStream stream) {
-    throw new RuntimeException("NIY");
+  /**
+   * Write encrypted message to a stream.
+   */
+  public void write(
+    @NotNull DataOutputStream stream
+  ) throws IOException {
+    stream.writeInt(this.cipherText.length);
+    stream.write(this.cipherText);
   }
 
   public @NotNull Message decrypt(
     @NotNull RequestEncryptionKeyPair.PrivateKey recipientPrivateKey
-  ) {
-    throw new RuntimeException("NIY");
+  ) throws GeneralSecurityException, IOException {
+    var clearText = recipientPrivateKey.decrypt(this.cipherText);
+
+    try (var stream = new DataInputStream(new ByteArrayInputStream(clearText)) ){
+      var body = stream.readUTF();
+
+      var senderPublicKey = stream.available() > 0
+        ? RequestEncryptionKeyPair.PublicKey.read(stream)
+        : null;
+
+      return new Message(body, senderPublicKey);
+    }
   }
 }
