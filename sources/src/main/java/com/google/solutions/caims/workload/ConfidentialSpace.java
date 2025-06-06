@@ -2,6 +2,7 @@ package com.google.solutions.caims.workload;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.solutions.caims.protocol.RequestEncryptionKeyPair;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -10,6 +11,8 @@ import java.net.UnixDomainSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +23,9 @@ public class ConfidentialSpace {
 
   /** Endpoint of the token endpoint */
   private static final String TEE_TOKEN_ENDPOINT = "/v1/token";
+
+  private static final int NONCE_LENGTH_MIN = 10;
+  private static final int NONCE_LENGTH_MAX = 74;
 
   private static final Gson GSON = new GsonBuilder().create();
 
@@ -94,6 +100,37 @@ public class ConfidentialSpace {
 
       return new AttestationToken(body.get().trim());
     }
+  }
+
+  /**
+   * Request an attestation token from the TEE server with an embedded REK.
+   * This method only works when used inside a Confidential Space trusted
+   * execution environment.
+   */
+  public @NotNull AttestationToken getAttestationToken(
+    @NotNull String audience,
+    @NotNull RequestEncryptionKeyPair.PublicKey key
+    ) throws IOException, GeneralSecurityException {
+
+    //
+    // To bind the workload server's REK to the attestation, we embed
+    // it as a nonce.
+    //
+    // Because nonces have a maximum length that's shorter than the
+    // serialized public key, we have to break it into multiple parts.
+    //
+    var encodedKey = key.toBase64();
+    int textLength = encodedKey.length();
+
+    var parts = new ArrayList<String>();
+    int startIndex = 0;
+    while (startIndex < textLength) {
+      int endIndex = Math.min(startIndex + NONCE_LENGTH_MAX, textLength);
+      parts.add(encodedKey.substring(startIndex, endIndex));
+      startIndex = endIndex;
+    }
+
+    return getAttestationToken(audience, parts);
   }
 
   private static void writeString(

@@ -31,6 +31,10 @@ public class WorkloadServer {
 
   /** Maximum allowed size for a message */
   private static final int MAX_MESSAGE_SIZE = 1024;
+  
+  public @NotNull RequestEncryptionKeyPair.PublicKey publicKey() {
+    return this.keyPair.publicKey();
+  }
 
   public WorkloadServer(
     int listenPort,

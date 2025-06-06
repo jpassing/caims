@@ -45,7 +45,7 @@ public class RegistrationDaemon extends Thread {
         //
         var attestationToken = this.confidentialSpace.getAttestationToken(
           "http://broker.example.com",
-          List.<String>of());
+          this.server.publicKey());
 
         this.metadataServer.setGuestAttribute(
           GUEST_ATTRIBUTE_NAMESPACE,
