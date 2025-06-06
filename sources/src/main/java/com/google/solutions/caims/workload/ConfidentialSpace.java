@@ -1,5 +1,7 @@
 package com.google.solutions.caims.workload;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -9,6 +11,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 
 public class ConfidentialSpace {
   /** Path to the Unix domain socket of the trusted execution environment server */
@@ -17,11 +21,16 @@ public class ConfidentialSpace {
   /** Endpoint of the token endpoint */
   private static final String TEE_TOKEN_ENDPOINT = "/v1/token";
 
+  private static final Gson GSON = new GsonBuilder().create();
+
   /**
    * Request an attestation token from the TEE server. This method only works
    * when used inside a Confidential Space trusted execution environment.
    */
-  public @NotNull AttestationToken getAttestationToken() throws IOException {
+  public @NotNull AttestationToken getAttestationToken(
+    @NotNull String audience,
+    @NotNull List<String> nonces
+    ) throws IOException {
     if (!new File(TEE_SERVER_SOCKET_PATH).exists()) {
       throw new ConfidentialSpaceException(
         String.format("TEE socket not found at %s, the most likely reason for " +
@@ -34,7 +43,10 @@ public class ConfidentialSpace {
     //
     var address = UnixDomainSocketAddress.of(TEE_SERVER_SOCKET_PATH);
 
-    var requestBody = "{}";
+    var requestBody = new HashMap<String, Object>();
+    requestBody.put("audience", audience);
+    requestBody.put("token_type", "OIDC");
+    requestBody.put("nonces", nonces);
 
     try (var clientChannel = SocketChannel.open(address)) {
       //
@@ -47,7 +59,7 @@ public class ConfidentialSpace {
         "\r\n" +
         "%s\r\n",
         TEE_TOKEN_ENDPOINT,
-        requestBody);
+        GSON.toJson(requestBody));
 
       //
       // Write request to the channel.

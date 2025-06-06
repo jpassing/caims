@@ -2,6 +2,8 @@ package com.google.solutions.caims.workload;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
+
 /**
  * Daemon that registers the workload server
  */
@@ -41,7 +43,10 @@ public class RegistrationDaemon extends Thread {
         // Get a fresh attestation tokens and publish it as guest attribute
         // so that the broker can discover and use the workload server.
         //
-        var attestationToken = this.confidentialSpace.getAttestationToken();
+        var attestationToken = this.confidentialSpace.getAttestationToken(
+          "http://broker.example.com",
+          List.<String>of());
+
         this.metadataServer.setGuestAttribute(
           GUEST_ATTRIBUTE_NAMESPACE,
           GUEST_ATTRIBUTE_NAME,
