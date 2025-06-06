@@ -59,7 +59,7 @@ public class RegistrationDaemon extends Thread {
       }
 
       try {
-        Thread.sleep(1 * MINUTES);
+        Thread.sleep(5 * MINUTES);
       }
       catch (InterruptedException ignored) {
       }
