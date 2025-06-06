@@ -2,6 +2,7 @@ package com.google.solutions.caims.workload;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.UnixDomainSocketAddress;
 import java.nio.ByteBuffer;
@@ -21,6 +22,12 @@ public class ConfidentialSpace {
    * when used inside a Confidential Space trusted execution environment.
    */
   public @NotNull AttestationToken getAttestationToken() throws IOException {
+    if (!new File(TEE_SERVER_SOCKET_PATH).exists()) {
+      throw new ConfidentialSpaceException(
+        String.format("TEE socket not found at %s, the most likely reason for " +
+          "that is that the workload server is executed outside a confidential" +
+          "space TEE", TEE_SERVER_SOCKET_PATH));
+    }
     //
     // Java's built-in HTTP client doesn't support sending HTTP requests over a
     // Unix domain socket, so we need to construct the request manually.
