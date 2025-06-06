@@ -61,6 +61,8 @@ public class ConfidentialSpace {
         TEE_TOKEN_ENDPOINT,
         GSON.toJson(requestBody));
 
+      System.out.println(httpRequest);
+
       //
       // Write request to the channel.
       //
