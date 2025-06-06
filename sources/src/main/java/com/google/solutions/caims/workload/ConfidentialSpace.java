@@ -46,7 +46,7 @@ public class ConfidentialSpace {
     var requestBody = new HashMap<String, Object>();
     requestBody.put("audience", audience);
     requestBody.put("token_type", "OIDC");
-    requestBody.put("nonce", nonces);
+    //requestBody.put("nonces", nonces);
 
     try (var clientChannel = SocketChannel.open(address)) {
       //
