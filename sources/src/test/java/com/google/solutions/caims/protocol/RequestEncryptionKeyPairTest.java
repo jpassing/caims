@@ -103,6 +103,18 @@ public class RequestEncryptionKeyPairTest {
         () -> RequestEncryptionKeyPair.PublicKey.read(stream));
     }
   }
+
+  @Test
+  public void publicKey_toBase64() throws Exception {
+    var key = RequestEncryptionKeyPair.generate().publicKey();
+
+    var serialized = key.toBase64();
+    assertNotNull(serialized);
+
+    var deserialized = RequestEncryptionKeyPair.PublicKey.fromBase64(serialized);
+    assertEquals(key, deserialized);
+  }
+
   //---------------------------------------------------------------------------
   // privateKey.
   //---------------------------------------------------------------------------

@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.security.GeneralSecurityException;
+import java.util.Base64;
 
 /**
  * A (typically ephemeral) key pair for encrypting requests.
@@ -96,6 +97,31 @@ public class RequestEncryptionKeyPair {
     }
 
     /**
+     * Serialize key using Tink's native format.
+     */
+    @NotNull byte[] toByteArray() throws GeneralSecurityException {
+      return TinkProtoKeysetFormat.serializeKeysetWithoutSecret(this.handle);
+    }
+
+    /**
+     * Serialize key using Tink's native format and wrap it as Base64.
+     */
+    public @NotNull String toBase64() throws GeneralSecurityException {
+      return Base64.getEncoder().encodeToString(toByteArray());
+    }
+
+    /**
+     * Create public key from the format created by {@see toBase64}.
+     */
+    public static @NotNull PublicKey fromBase64(
+      @NotNull String key
+    ) throws GeneralSecurityException {
+      return new PublicKey(
+        TinkProtoKeysetFormat.parseKeysetWithoutSecret(
+          Base64.getDecoder().decode(key)));
+    }
+
+    /**
      * Serialize key using Tink's native format and write it to a stream.
      */
     static @NotNull PublicKey read(
@@ -116,7 +142,7 @@ public class RequestEncryptionKeyPair {
     void write(
       @NotNull DataOutputStream stream
     ) throws GeneralSecurityException, IOException {
-      var serialized = TinkProtoKeysetFormat.serializeKeysetWithoutSecret(this.handle);
+      var serialized = toByteArray();
       stream.writeInt(serialized.length);
       stream.write(serialized);
     }
