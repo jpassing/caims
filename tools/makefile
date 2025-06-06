@@ -19,6 +19,6 @@ debug-vm: debug-image
 		--image-project=confidential-space-images \
 		--image-family=confidential-space-debug \
 		--service-account=$(SERVICE_ACCOUNT_NAME)@$(PROJECT_ID).iam.gserviceaccount.com \
-		--metadata="^~^tee-image-reference=us-docker.pkg.dev/$(PROJECT_ID)/$(REPOSITORY)/maven-debug:latest"
+		--metadata="tee-image-reference=us-docker.pkg.dev/$(PROJECT_ID)/$(REPOSITORY)/maven-debug:latest,enable-guest-attributes=TRUE"
         
     echo "Connect to 'cs-debug', then run `sudo ctr t exec --exec-id 1 --tty tee-container /bin/bash` to attach to the container"

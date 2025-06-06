@@ -66,8 +66,6 @@ public class ConfidentialSpace {
         requestBodyString.getBytes(StandardCharsets.UTF_8).length,
         requestBodyString);
 
-      System.out.println(httpRequest);
-
       //
       // Write request to the channel.
       //
