@@ -47,6 +47,7 @@ public class ConfidentialSpace {
     requestBody.put("audience", audience);
     requestBody.put("token_type", "OIDC");
     //requestBody.put("nonces", nonces);
+    var requestBodyString = GSON.toJson(requestBody);
 
     try (var clientChannel = SocketChannel.open(address)) {
       //
@@ -56,10 +57,12 @@ public class ConfidentialSpace {
         "Host: localhost\r\n" +
         "Connection: close\r\n" +
         "Content-type: application/json\r\n" +
+        "Content-length: %d\r\n" +
         "\r\n" +
-        "%s\r\n",
+        "%s",
         TEE_TOKEN_ENDPOINT,
-        GSON.toJson(requestBody));
+        requestBodyString.getBytes(StandardCharsets.UTF_8).length,
+        requestBodyString);
 
       System.out.println(httpRequest);
 
