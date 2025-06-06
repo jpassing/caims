@@ -46,14 +46,14 @@ public class ConfidentialSpace {
     var requestBody = new HashMap<String, Object>();
     requestBody.put("audience", audience);
     requestBody.put("token_type", "OIDC");
-    //requestBody.put("nonces", nonces);
+    requestBody.put("nonces", nonces);
     var requestBodyString = GSON.toJson(requestBody);
 
     try (var clientChannel = SocketChannel.open(address)) {
       //
       // Format a HTTP request.
       //
-      var httpRequest = String.format("POST %s HTTP/1.1\r\n" +
+      var httpRequest = String.format("POST %s HTTP/1.0\r\n" +
         "Host: localhost\r\n" +
         "Connection: close\r\n" +
         "Content-type: application/json\r\n" +
@@ -79,7 +79,7 @@ public class ConfidentialSpace {
       //
       // Validate response and extract the response body.
       //
-      if (!httpResponse.startsWith("HTTP 200 OK")) {
+      if (!httpResponse.startsWith("HTTP/1.1 200 OK")) {
         System.err.printf("[ERROR] Received unexpected response from TEE server: %s\n", httpResponse);
         throw new ConfidentialSpaceException("Received unexpected response from TEE server");
       }
