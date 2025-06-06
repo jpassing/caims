@@ -53,13 +53,17 @@ public class ConfidentialSpace {
       //
       // Format a HTTP request.
       //
+      // Use HTTP 1.0 so that we don't have to deal with chunked responses.
+      //
       var httpRequest = String.format("POST %s HTTP/1.0\r\n" +
         "Host: localhost\r\n" +
         "Connection: close\r\n" +
         "Content-type: application/json\r\n" +
+        "Content-length: %d\r\n" +
         "\r\n" +
         "%s",
         TEE_TOKEN_ENDPOINT,
+        requestBodyString.getBytes(StandardCharsets.UTF_8).length,
         requestBodyString);
 
       System.out.println(httpRequest);
@@ -77,7 +81,7 @@ public class ConfidentialSpace {
       //
       // Validate response and extract the response body.
       //
-      if (!httpResponse.startsWith("HTTP/1.1 200 OK")) {
+      if (!httpResponse.startsWith("HTTP/1.0 200 OK")) {
         System.err.printf("[ERROR] Received unexpected response from TEE server: %s\n", httpResponse);
         throw new ConfidentialSpaceException("Received unexpected response from TEE server");
       }
