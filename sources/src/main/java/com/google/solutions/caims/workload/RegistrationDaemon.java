@@ -34,7 +34,7 @@ public class RegistrationDaemon extends Thread {
     //
     while (true)
     {
-      System.out.printf("[INFO] Refreshing server registration...");
+      System.out.println("[INFO] Refreshing server registration...");
 
       try {
         //
@@ -47,11 +47,16 @@ public class RegistrationDaemon extends Thread {
           GUEST_ATTRIBUTE_NAME,
           attestationToken.token());
 
-        Thread.sleep(1 * MINUTES);
       }
       catch (Exception e) {
         System.err.printf("[ERROR] Server registration failed: %s\n", e.getMessage());
         e.printStackTrace();
+      }
+
+      try {
+        Thread.sleep(1 * MINUTES);
+      }
+      catch (InterruptedException ignored) {
       }
     }
   }
