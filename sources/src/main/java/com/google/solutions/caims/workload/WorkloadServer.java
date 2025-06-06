@@ -1,4 +1,4 @@
-package com.google.solutions.caims;
+package com.google.solutions.caims.workload;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.caims.protocol.EncryptedMessage;
@@ -17,7 +17,10 @@ import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.concurrent.Executors;
 
-public class Server {
+/**
+ * Workload server, intended to run in a Confidential Space Trusted Execution Environment (TEE).
+ */
+public class WorkloadServer {
   private final @NotNull HttpServer server;
 
   /** The server's key pair, used for en/decrypting messages */
@@ -29,7 +32,7 @@ public class Server {
   /** Maximum allowed size for a message */
   private static final int MAX_MESSAGE_SIZE = 1024;
 
-  public Server(
+  public WorkloadServer(
     int listenPort,
     int threadPoolSize
   ) throws GeneralSecurityException, IOException {
@@ -105,7 +108,11 @@ public class Server {
       "The client did not provide a public key");
 
     //
-    // Create a fake response and encrypt it using the client's key.
+    // Handle the request, for example by forwarding the request to a vLLM server
+    // that's running in the same container.
+    //
+    // As an example, we generate a static fake response and send that back to the client,
+    // encrypted it using the client's key.
     //
     var response = new Message(
       String.format(

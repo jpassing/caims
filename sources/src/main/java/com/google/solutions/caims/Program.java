@@ -1,8 +1,8 @@
 package com.google.solutions.caims;
 
 import com.google.crypto.tink.hybrid.HybridConfig;
+import com.google.solutions.caims.workload.WorkloadServer;
 
-import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
 
@@ -35,9 +35,9 @@ public class Program {
         System.out.println("Running as broker");
         return;
 
-      case "server":
-        System.out.println("Running as server");
-        new Server(8080, 10).start();
+      case "workload":
+        System.out.println("Running as workload");
+        new WorkloadServer(8080, 10).start();
         return;
 
       default:
