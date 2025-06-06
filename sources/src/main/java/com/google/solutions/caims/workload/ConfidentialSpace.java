@@ -57,11 +57,9 @@ public class ConfidentialSpace {
         "Host: localhost\r\n" +
         "Connection: close\r\n" +
         "Content-type: application/json\r\n" +
-        "Content-length: %d\r\n" +
         "\r\n" +
         "%s",
         TEE_TOKEN_ENDPOINT,
-        requestBodyString.getBytes(StandardCharsets.UTF_8).length,
         requestBodyString);
 
       System.out.println(httpRequest);
