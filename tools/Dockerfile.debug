@@ -1,0 +1,5 @@
+FROM maven:3.9.6-eclipse-temurin-17
+ENTRYPOINT ["/caims/sources/run.sh", "workload"]
+
+RUN git clone https://github.com/jpassing/caims.git
+EOF
