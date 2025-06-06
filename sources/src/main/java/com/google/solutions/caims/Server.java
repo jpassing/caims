@@ -19,9 +19,14 @@ import java.util.concurrent.Executors;
 
 public class Server {
   private final @NotNull HttpServer server;
+
+  /** The server's key pair, used for en/decrypting messages */
   private final @NotNull RequestEncryptionKeyPair keyPair;
+
+  /** Charset used in messages and HTTP responses */
   private static final @NotNull Charset CHARSET = StandardCharsets.UTF_8;
 
+  /** Maximum allowed size for a message */
   private static final int MAX_MESSAGE_SIZE = 1024;
 
   public Server(
@@ -36,12 +41,15 @@ public class Server {
     this.keyPair = RequestEncryptionKeyPair.generate();
 
     //
-    // Start a HTTP server and listen for inference requests.
+    // Start an HTTP server and listen for inference requests.
     //
     this.server = HttpServer.create(new InetSocketAddress(listenPort), 0);
     this.server.setExecutor(Executors.newFixedThreadPool(threadPoolSize));
 
-    System.out.printf("Listening on port %d, using a maximum of %d threads\n", listenPort, threadPoolSize);
+    System.out.printf(
+      "[INFO] Listening on port %d, using a maximum of %d threads\n",
+      listenPort,
+      threadPoolSize);
 
     server.createContext("/", exchange -> {
       //
@@ -73,6 +81,7 @@ public class Server {
           .getResponseHeaders()
           .set("Content-Type", "binary/octet-stream");
 
+        System.out.println("[INFO] Received inference request");
         responseMessage.write(responseStream);
       }
       catch (Exception e) {
@@ -87,14 +96,20 @@ public class Server {
   ) throws GeneralSecurityException, IOException {
     System.out.println("[INFO] Handling inference request...");
 
+    //
+    // Decrypt the request using the server's private key.
+    //
     var request = encryptedRequest.decrypt(this.keyPair.privateKey());
     Preconditions.checkNotNull(
       request.senderPublicKey(),
       "The client did not provide a public key");
 
+    //
+    // Create a fake response and encrypt it using the client's key.
+    //
     var response = new Message(
       String.format(
-        "> %s\nCan't help you there, but I won't tell anybody you asked.",
+        "> %s\nThat's a good question.",
         request.toString()),
       null);
     return response.encrypt(request.senderPublicKey());
