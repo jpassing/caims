@@ -1,6 +1,9 @@
 package com.google.solutions.caims;
 
 import com.google.crypto.tink.hybrid.HybridConfig;
+import com.google.solutions.caims.workload.ConfidentialSpace;
+import com.google.solutions.caims.workload.MetadataServer;
+import com.google.solutions.caims.workload.RegistrationDaemon;
 import com.google.solutions.caims.workload.WorkloadServer;
 
 import java.security.GeneralSecurityException;
@@ -37,7 +40,15 @@ public class Program {
 
       case "workload":
         System.out.println("Running as workload");
-        new WorkloadServer(8080, 10).start();
+        var server = new WorkloadServer(8080, 10);
+        var daemon = new RegistrationDaemon(
+          server,
+          new ConfidentialSpace(),
+          new MetadataServer());
+
+        daemon.start();
+        server.start();
+
         return;
 
       default:
@@ -45,7 +56,7 @@ public class Program {
         System.err.println("Supported actions are:");
         System.err.println("  client:    Run client application");
         System.err.println("  broker:    Run broker (typically run in Cloud Run)");
-        System.err.println("  server:    Run server (typically run on a confidential VM)");
+        System.err.println("  workload:  Run workload server (typically run on a confidential VM)");
     }
   }
 }
