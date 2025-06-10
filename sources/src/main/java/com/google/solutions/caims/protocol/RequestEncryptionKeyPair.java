@@ -4,10 +4,10 @@ import com.google.crypto.tink.*;
 import com.google.crypto.tink.hybrid.HybridKeyTemplates;
 import com.google.crypto.tink.proto.KeyTemplate;
 import org.jetbrains.annotations.NotNull;
+import com.google.crypto.tink.subtle.Base64;
 
 import java.io.*;
 import java.security.GeneralSecurityException;
-import java.util.Base64;
 
 /**
  * A (typically ephemeral) key pair for encrypting requests.
@@ -107,7 +107,7 @@ public class RequestEncryptionKeyPair {
      * Serialize key using Tink's native format and wrap it as Base64.
      */
     public @NotNull String toBase64() throws GeneralSecurityException {
-      return Base64.getEncoder().encodeToString(toByteArray());
+      return Base64.encode(toByteArray());
     }
 
     /**
@@ -118,7 +118,7 @@ public class RequestEncryptionKeyPair {
     ) throws GeneralSecurityException {
       return new PublicKey(
         TinkProtoKeysetFormat.parseKeysetWithoutSecret(
-          Base64.getDecoder().decode(key)));
+          Base64.decode(key)));
     }
 
     /**

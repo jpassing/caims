@@ -25,6 +25,7 @@ public class ConfidentialSpace {
   private static final String TEE_TOKEN_ENDPOINT = "/v1/token";
 
   private static final int NONCE_LENGTH_MAX = 74;
+  private static final int NONCE_LENGTH_MIN = 10;
 
   private static final Gson GSON = new GsonBuilder().create();
 
@@ -121,10 +122,18 @@ public class ConfidentialSpace {
     var encodedKey = key.toBase64();
     int textLength = encodedKey.length();
 
+    //
+    // Make sure that the last part doesn't become too short.
+    //
+    int partLength = NONCE_LENGTH_MAX;
+    while ((encodedKey.length() % partLength) < NONCE_LENGTH_MIN) {
+      partLength--;
+    }
+
     var parts = new ArrayList<String>();
     int startIndex = 0;
     while (startIndex < textLength) {
-      int endIndex = Math.min(startIndex + NONCE_LENGTH_MAX, textLength);
+      int endIndex = Math.min(startIndex + partLength, textLength);
       parts.add(encodedKey.substring(startIndex, endIndex));
       startIndex = endIndex;
     }
@@ -158,8 +167,4 @@ public class ConfidentialSpace {
     return result.toString();
   }
 
-  /**
-   * A token attesting the configuration of the TEE and its VM.
-   */
-  public record AttestationToken(@NotNull String token) {}
 }
