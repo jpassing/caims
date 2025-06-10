@@ -19,4 +19,4 @@ WORKDIR /app
 COPY --from=build /app/target/confidential-model-serving-1.0.0.jar .
 
 EXPOSE 8080
-CMD ["confidential-model-serving-1.0.0.jar"]
+CMD ["./run.sh", "workload"]

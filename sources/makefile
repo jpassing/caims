@@ -9,7 +9,7 @@ VM_NAME = cs-debug
 #
 .PHONY: debug-image
 debug-image:
-	docker build -t us-docker.pkg.dev/$(PROJECT_ID)/$(REPOSITORY)/maven-debug . -f ../soures/workload-debug.dockerfile
+	docker build -t us-docker.pkg.dev/$(PROJECT_ID)/$(REPOSITORY)/maven-debug . -f workload-debug.dockerfile
 	docker push us-docker.pkg.dev/$(PROJECT_ID)/$(REPOSITORY)/maven-debug:latest
 	
 .PHONY: debug-vm
@@ -37,6 +37,7 @@ debug-vm-registration:
 #
 # Broker targets
 #
+.PHONY: broker-image
 broker-image:
-	docker build -t us-docker.pkg.dev/$(PROJECT_ID)/$(REPOSITORY)/broker . -f ../soures/broker.dockerfile
+	docker build -t us-docker.pkg.dev/$(PROJECT_ID)/$(REPOSITORY)/broker . -f broker.dockerfile
 	docker push us-docker.pkg.dev/$(PROJECT_ID)/$(REPOSITORY)/broker:latest
