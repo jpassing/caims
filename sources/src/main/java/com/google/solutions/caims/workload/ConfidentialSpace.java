@@ -24,7 +24,6 @@ public class ConfidentialSpace {
   /** Endpoint of the token endpoint */
   private static final String TEE_TOKEN_ENDPOINT = "/v1/token";
 
-  private static final int NONCE_LENGTH_MIN = 10;
   private static final int NONCE_LENGTH_MAX = 74;
 
   private static final Gson GSON = new GsonBuilder().create();

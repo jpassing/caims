@@ -2,8 +2,6 @@ package com.google.solutions.caims.workload;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
-
 /**
  * Daemon that registers the workload server
  */
