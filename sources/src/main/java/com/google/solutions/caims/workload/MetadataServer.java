@@ -1,19 +1,25 @@
 package com.google.solutions.caims.workload;
 
+import com.google.auth.oauth2.ComputeEngineCredentials;
 import com.google.common.base.Preconditions;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 /**
  * Helper class for interacting with the Compute Engine
  * instance metadata server.
  */
 public class MetadataServer {
-  private static final String BASE_URL = "http://169.254.169.254/computeMetadata/v1/instance/guest-attributes/";
+  private static final HttpClient client = HttpClient
+    .newBuilder()
+    .build();
 
   /**
    * Publish a guest attribute for the current VM.
@@ -26,38 +32,31 @@ public class MetadataServer {
     Preconditions.checkArgument(!namespace.contains("/"), "Namespace must not contain slashes");
     Preconditions.checkArgument(!name.contains("/"), "Name must not contain slashes");
 
-    var url = new URL(BASE_URL + namespace + "/" + name);
-
-    HttpURLConnection connection = null;
     try {
-      connection = (HttpURLConnection) url.openConnection();
+      var request = HttpRequest
+        .newBuilder()
+        .uri(new URI(
+          String.format(
+            "%s/computeMetadata/v1/instance/guest-attributes/%s/%s",
+            ComputeEngineCredentials.getMetadataServerUrl(),
+            namespace,
+            name)))
+        .header("Metadata-Flavor", "Google")
+        .PUT(HttpRequest.BodyPublishers.ofString(value))
+        .build();
 
-      connection.setRequestMethod("PUT");
-      connection.setRequestProperty("Metadata-Flavor", "Google");
-      connection.setDoOutput(true);
+      var response = this.client
+        .send(request, HttpResponse.BodyHandlers.ofString());
 
-      //
-      // Write the request.
-      //
-      byte[] postData = value.getBytes(StandardCharsets.UTF_8);
-      connection.setRequestProperty("Content-Length", String.valueOf(postData.length));
-      try (var requestStream = connection.getOutputStream()) {
-        requestStream.write(postData);
-      }
-
-      //
-      // Read response.
-      //
-      int responseCode = connection.getResponseCode();
-      if (responseCode != HttpURLConnection.HTTP_OK) {
+      if (response.statusCode() != HttpURLConnection.HTTP_OK) {
         throw new IOException(
-          String.format("Setting guest attribute failed with HTTP error code: %d", responseCode));
+          String.format(
+            "Setting guest attribute failed with HTTP error code: %d",
+            response.statusCode()));
       }
     }
-    finally {
-      if (connection != null) {
-        connection.disconnect();
-      }
+    catch (URISyntaxException | InterruptedException e) {
+      throw new IOException(e);
     }
   }
 }
