@@ -60,11 +60,16 @@ public class DiscoveryDaemon extends Thread {
           .stream()
           .flatMap(i -> Optional.ofNullable(i.getInstances()).stream())
           .flatMap(i -> i.stream())
-          .filter(i -> i.getMetadata().containsKey("tee-image-reference"))
+          .filter(i -> i.getMetadata()
+            .getItems()
+            .stream()
+            .anyMatch(m -> m.getKey().equals("tee-image-reference")))
           .toList();
 
         var registrations = new HashSet<Broker.Registration>();
         for (var instance : confidentialSpaceInstances) {
+          var zoneId = instance.getZone().substring(instance.getZone().lastIndexOf('/') + 1);
+
           //
           // Read the instance's attestation token. This might fail if the instance
           // hasn't finished initializing yet or if it's an unrelated instance.
@@ -72,7 +77,7 @@ public class DiscoveryDaemon extends Thread {
           try {
             var attestationToken = new AttestationToken(this.computeClient
               .instances()
-              .getGuestAttributes(this.projectId, instance.getZone(), instance.getName())
+              .getGuestAttributes(this.projectId, zoneId, instance.getName())
               .setQueryPath(
                 String.format(
                   "%s/%s",
@@ -86,11 +91,13 @@ public class DiscoveryDaemon extends Thread {
               .map(v -> v.getValue())
               .get());
 
-            registrations.add(new Broker.Registration(
+            var registration = new Broker.Registration(
               this.projectId,
-              instance.getZone(),
+              zoneId,
               instance.getName(),
-              attestationToken));
+              attestationToken);
+            System.out.printf("[INFO] Discovered workload on %s\n", registration.instanceName());
+            registrations.add(registration);
           }
           catch (Exception e) {
             System.err.printf(
