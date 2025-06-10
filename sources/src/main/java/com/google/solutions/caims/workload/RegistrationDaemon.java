@@ -3,20 +3,20 @@ package com.google.solutions.caims.workload;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Daemon that registers the workload server
+ * Daemon that registers the workload server.
  */
 public class RegistrationDaemon extends Thread {
   private static final int MINUTES = 60 * 1000;
   public static final String GUEST_ATTRIBUTE_NAMESPACE = "workload-server";
   public static final String GUEST_ATTRIBUTE_NAME = "token";
 
-  private final @NotNull WorkloadServer server;
+  private final @NotNull Workload server;
   private final @NotNull ConfidentialSpace confidentialSpace;
   private final @NotNull MetadataServer metadataServer;
 
 
   public RegistrationDaemon(
-    @NotNull WorkloadServer server,
+    @NotNull Workload server,
     @NotNull ConfidentialSpace confidentialSpace,
     @NotNull MetadataServer metadataServer
   ) {
@@ -32,8 +32,7 @@ public class RegistrationDaemon extends Thread {
     // every so often. The refresh is necessary because the attestation
     // token has a finite lifetime.
     //
-    while (true)
-    {
+    while (true) {
       System.out.println("[INFO] Refreshing server registration...");
 
       try {

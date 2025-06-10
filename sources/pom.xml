@@ -47,6 +47,11 @@
             <version>v1-rev20250417-2.0.0</version>
         </dependency>
         <dependency>
+            <groupId>com.google.apis</groupId>
+            <artifactId>google-api-services-compute</artifactId>
+            <version>v1-rev20250415-2.0.0</version>
+        </dependency>
+        <dependency>
             <groupId>com.google.crypto.tink</groupId>
             <artifactId>tink</artifactId>
             <version>1.17.0</version>

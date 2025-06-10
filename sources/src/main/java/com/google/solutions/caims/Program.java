@@ -1,10 +1,13 @@
 package com.google.solutions.caims;
 
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.crypto.tink.hybrid.HybridConfig;
+import com.google.solutions.caims.broker.Broker;
+import com.google.solutions.caims.broker.DiscoveryDaemon;
 import com.google.solutions.caims.workload.ConfidentialSpace;
 import com.google.solutions.caims.workload.MetadataServer;
 import com.google.solutions.caims.workload.RegistrationDaemon;
-import com.google.solutions.caims.workload.WorkloadServer;
+import com.google.solutions.caims.workload.Workload;
 
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
@@ -36,11 +39,18 @@ public class Program {
 
       case "broker":
         System.out.println("Running as broker");
+        var broker = new Broker();
+        var discoveryDaemon = new DiscoveryDaemon(
+          broker,
+          GoogleCredentials.getApplicationDefault(),
+          null);
+
+        discoveryDaemon.start();
         return;
 
       case "workload":
         System.out.println("Running as workload");
-        var server = new WorkloadServer(8080, 10);
+        var server = new Workload(8080, 10);
         var daemon = new RegistrationDaemon(
           server,
           new ConfidentialSpace(),

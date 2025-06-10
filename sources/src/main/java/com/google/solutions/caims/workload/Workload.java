@@ -20,7 +20,7 @@ import java.util.concurrent.Executors;
 /**
  * Workload server, intended to run in a Confidential Space Trusted Execution Environment (TEE).
  */
-public class WorkloadServer {
+public class Workload {
   private final @NotNull HttpServer server;
 
   /** The server's key pair, used for en/decrypting messages */
@@ -36,7 +36,7 @@ public class WorkloadServer {
     return this.keyPair.publicKey();
   }
 
-  public WorkloadServer(
+  public Workload(
     int listenPort,
     int threadPoolSize
   ) throws GeneralSecurityException, IOException {
