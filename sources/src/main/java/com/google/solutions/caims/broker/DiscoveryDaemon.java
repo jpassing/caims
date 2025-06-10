@@ -19,7 +19,6 @@ import java.util.Optional;
  * Daemon that discovers workload servers.
  */
 public class DiscoveryDaemon extends Thread {
-  private static final int MINUTES = 60 * 1000;
   private  final @NotNull Broker broker;
   private final @NotNull Compute computeClient;
   private final @NotNull String projectId;
@@ -119,7 +118,7 @@ public class DiscoveryDaemon extends Thread {
       }
 
       try {
-        Thread.sleep(1 * MINUTES);
+        Thread.sleep(20 * 1000);
       }
       catch (InterruptedException ignored) {
       }

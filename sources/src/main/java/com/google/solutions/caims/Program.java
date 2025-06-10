@@ -37,45 +37,55 @@ public class Program {
     var metadataClient = new MetadataClient();
 
     switch (action) {
-      case "client":
+      case "client": {
         //
         // Run the client (on a local workstation). The client simulates a
         // front-end app (or phone app) which an end-user interacts with.
         //
         System.out.println("[INFO] Running as client");
         return;
-
-      case "broker":
+      }
+      case "broker": {
         //
         // Run the broker (on Cloud Run). The broker helps the client find
         // available workload instances and forwards E2E-encrypted
         // inference requests from the client to workload instances.
         //
         System.out.println("[INFO] Running as broker");
+        var metadata = metadataClient.getInstanceMetadata();
+
         var broker = new Broker(
+          new Broker.Identifier(metadata.get("numericProjectId")
+            .toString()),
           Optional
             .ofNullable(System.getenv("PORT"))
             .map(Integer::parseInt)
             .orElse(8080),
-          10);
+          10,
+          10,
+          false); // TODO: Make configurable
         var discoveryDaemon = new DiscoveryDaemon(
           broker,
           GoogleCredentials.getApplicationDefault(),
-          (String)metadataClient.getInstanceMetadata().get("projectId"));
+          metadata.get("projectId")
+            .toString());
 
         discoveryDaemon.start();
         broker.start();
         return;
-
-      case "workload":
+      }
+      case "workload": {
         //
         // Run the workload (in a trusted execution environment). The workload
         // receives E2E-encrypted inference requests from the broker and evaluates
         // them.
         //
         System.out.println("[INFO] Running as workload");
+        var metadata = metadataClient.getInstanceMetadata();
         var server = new Workload(8080, 10);
         var daemon = new RegistrationDaemon(
+          new Broker.Identifier(metadata.get("numericProjectId")
+            .toString()),
           server,
           new ConfidentialSpace(),
           metadataClient);
@@ -84,7 +94,7 @@ public class Program {
         server.start();
 
         return;
-
+      }
       default:
         System.err.printf("Unrecognized action '%s'\n", action);
         System.err.println("Supported actions are:");

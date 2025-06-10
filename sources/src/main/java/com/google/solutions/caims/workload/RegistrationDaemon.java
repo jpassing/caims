@@ -1,5 +1,6 @@
 package com.google.solutions.caims.workload;
 
+import com.google.solutions.caims.broker.Broker;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -10,16 +11,19 @@ public class RegistrationDaemon extends Thread {
   public static final String GUEST_ATTRIBUTE_NAMESPACE = "workload-server";
   public static final String GUEST_ATTRIBUTE_NAME = "token";
 
+  private final @NotNull Broker.Identifier brokerId;
   private final @NotNull Workload server;
   private final @NotNull ConfidentialSpace confidentialSpace;
   private final @NotNull MetadataClient metadataClient;
 
 
   public RegistrationDaemon(
+    @NotNull Broker.Identifier brokerId,
     @NotNull Workload server,
     @NotNull ConfidentialSpace confidentialSpace,
     @NotNull MetadataClient metadataClient
   ) {
+    this.brokerId = brokerId;
     this.server = server;
     this.confidentialSpace = confidentialSpace;
     this.metadataClient = metadataClient;
@@ -43,7 +47,7 @@ public class RegistrationDaemon extends Thread {
         // so that the broker can discover and use the workload server.
         //
         var attestationToken = this.confidentialSpace.getAttestationToken(
-          "http://broker.example.com",
+          this.brokerId.toString(),
           this.server.publicKey());
 
         this.metadataClient.setGuestAttribute(
