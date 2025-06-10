@@ -37,6 +37,8 @@ public class DiscoveryDaemon extends Thread {
       new HttpCredentialsAdapter(credentials))
       .setApplicationName(UserAgent.VALUE)
       .build();
+
+    setDaemon(true);
   }
 
   @Override

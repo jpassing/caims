@@ -5,12 +5,13 @@ import com.google.crypto.tink.hybrid.HybridConfig;
 import com.google.solutions.caims.broker.Broker;
 import com.google.solutions.caims.broker.DiscoveryDaemon;
 import com.google.solutions.caims.workload.ConfidentialSpace;
-import com.google.solutions.caims.workload.MetadataServer;
+import com.google.solutions.caims.workload.MetadataClient;
 import com.google.solutions.caims.workload.RegistrationDaemon;
 import com.google.solutions.caims.workload.Workload;
 
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
+import java.util.Optional;
 
 public class Program {
   static {
@@ -32,29 +33,51 @@ public class Program {
    */
   public static void main(String[] args) throws Exception {
     var action = Arrays.stream(args).findFirst().orElse("");
+
+    var metadataClient = new MetadataClient();
+
     switch (action) {
       case "client":
-        System.out.println("Running as client");
+        //
+        // Run the client (on a local workstation). The client simulates a
+        // front-end app (or phone app) which an end-user interacts with.
+        //
+        System.out.println("[INFO] Running as client");
         return;
 
       case "broker":
-        System.out.println("Running as broker");
-        var broker = new Broker();
+        //
+        // Run the broker (on Cloud Run). The broker helps the client find
+        // available workload instances and forwards E2E-encrypted
+        // inference requests from the client to workload instances.
+        //
+        System.out.println("[INFO] Running as broker");
+        var broker = new Broker(
+          Optional
+            .ofNullable(System.getenv("PORT"))
+            .map(Integer::parseInt)
+            .orElse(8080),
+          10);
         var discoveryDaemon = new DiscoveryDaemon(
           broker,
           GoogleCredentials.getApplicationDefault(),
-          null);
+          (String)metadataClient.getInstanceMetadata().get("projectId"));
 
         discoveryDaemon.start();
         return;
 
       case "workload":
-        System.out.println("Running as workload");
+        //
+        // Run the workload (in a trusted execution environment). The workload
+        // receives E2E-encrypted inference requests from the broker and evaluates
+        // them.
+        //
+        System.out.println("[INFO] Running as workload");
         var server = new Workload(8080, 10);
         var daemon = new RegistrationDaemon(
           server,
           new ConfidentialSpace(),
-          new MetadataServer());
+          metadataClient);
 
         daemon.start();
         server.start();

@@ -12,17 +12,19 @@ public class RegistrationDaemon extends Thread {
 
   private final @NotNull Workload server;
   private final @NotNull ConfidentialSpace confidentialSpace;
-  private final @NotNull MetadataServer metadataServer;
+  private final @NotNull MetadataClient metadataClient;
 
 
   public RegistrationDaemon(
     @NotNull Workload server,
     @NotNull ConfidentialSpace confidentialSpace,
-    @NotNull MetadataServer metadataServer
+    @NotNull MetadataClient metadataClient
   ) {
     this.server = server;
     this.confidentialSpace = confidentialSpace;
-    this.metadataServer = metadataServer;
+    this.metadataClient = metadataClient;
+
+    setDaemon(true);
   }
 
   @Override
@@ -44,7 +46,7 @@ public class RegistrationDaemon extends Thread {
           "http://broker.example.com",
           this.server.publicKey());
 
-        this.metadataServer.setGuestAttribute(
+        this.metadataClient.setGuestAttribute(
           GUEST_ATTRIBUTE_NAMESPACE,
           GUEST_ATTRIBUTE_NAME,
           attestationToken.token());

@@ -11,19 +11,14 @@ import com.google.common.base.Preconditions;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 
 /**
  * Helper class for interacting with the Compute Engine
  * instance metadata server.
  */
-public class MetadataServer {
+public class MetadataClient {
   private static final HttpClient client = HttpClient
     .newBuilder()
     .build();
