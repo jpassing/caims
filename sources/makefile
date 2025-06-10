@@ -1,6 +1,7 @@
 REPOSITORY = cs-repo
 PROJECT_ID := $(shell gcloud config get core/project)
-ZONE = asia-southeast1-a
+REGION = asia-southeast1
+ZONE = $(REGION)-a
 SERVICE_ACCOUNT_NAME = cs-sa-1
 VM_NAME = cs-debug
 
@@ -41,3 +42,11 @@ debug-vm-registration:
 broker-image:
 	docker build -t us-docker.pkg.dev/$(PROJECT_ID)/$(REPOSITORY)/broker . -f broker.dockerfile
 	docker push us-docker.pkg.dev/$(PROJECT_ID)/$(REPOSITORY)/broker:latest
+    
+.PHONY: broker
+broker:
+	gcloud run deploy broker \
+		--image=us-docker.pkg.dev/$(PROJECT_ID)/$(REPOSITORY)/broker:latest \
+		--allow-unauthenticated \
+		--region $(REGION) \
+		--service-account=$(SERVICE_ACCOUNT_NAME)@$(PROJECT_ID).iam.gserviceaccount.com
