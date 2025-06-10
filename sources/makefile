@@ -44,7 +44,7 @@ broker-image:
 	docker push us-docker.pkg.dev/$(PROJECT_ID)/$(REPOSITORY)/broker:latest
     
 .PHONY: broker
-broker:
+broker: broker-image
 	gcloud run deploy broker \
 		--image=us-docker.pkg.dev/$(PROJECT_ID)/$(REPOSITORY)/broker:latest \
 		--allow-unauthenticated \

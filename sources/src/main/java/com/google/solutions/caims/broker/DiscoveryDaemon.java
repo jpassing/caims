@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.HashSet;
+import java.util.Optional;
 
 /**
  * Daemon that discovers workload servers.
@@ -57,7 +58,8 @@ public class DiscoveryDaemon extends Thread {
         var confidentialSpaceInstances = instances.getItems()
           .values()
           .stream()
-          .flatMap(i -> i.getInstances().stream())
+          .flatMap(i -> Optional.ofNullable(i.getInstances()).stream())
+          .flatMap(i -> i.stream())
           .filter(i -> i.getMetadata().containsKey("tee-image-reference"))
           .toList();
 
