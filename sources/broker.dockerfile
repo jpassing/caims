@@ -16,7 +16,7 @@ RUN mvn clean package -DskipTests
 FROM gcr.io/distroless/java17-debian12
 WORKDIR /app
 
-COPY --from=build /app/target/confidential-model-serving-1.0.0.jar .
+COPY --from=build /app/target/confidential-model-serving-1.0.0-jar-with-dependencies.jar app.jar
 
 EXPOSE 8080
-CMD ["./run.sh", "broker"]
+CMD ["app.jar", "broker"]
