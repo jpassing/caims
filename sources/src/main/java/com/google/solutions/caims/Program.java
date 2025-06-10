@@ -64,6 +64,7 @@ public class Program {
           (String)metadataClient.getInstanceMetadata().get("projectId"));
 
         discoveryDaemon.start();
+        broker.start();
         return;
 
       case "workload":

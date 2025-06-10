@@ -49,6 +49,13 @@ public class Broker {
     });
   }
 
+  /**
+   * Start HTTP server on a background thread.
+   */
+  public final void start() {
+    this.server.start();
+  }
+
   void refreshRegistrations(
     @NotNull Set<Registration> registrations
   ) {
