@@ -1,16 +1,11 @@
 package com.google.solutions.caims;
 
-import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.GenericJson;
-import com.google.api.client.json.JsonObjectParser;
-import com.google.api.client.json.gson.GsonFactory;
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.common.reflect.TypeToken;
 import com.google.crypto.tink.hybrid.HybridConfig;
 import com.google.solutions.caims.broker.Broker;
 import com.google.solutions.caims.broker.DiscoveryDaemon;
-import com.google.solutions.caims.broker.RequestToken;
+import com.google.solutions.caims.client.Client;
 import com.google.solutions.caims.workload.ConfidentialSpace;
 import com.google.solutions.caims.workload.MetadataClient;
 import com.google.solutions.caims.workload.RegistrationDaemon;
@@ -130,7 +125,7 @@ public class Program {
    * Run the client (on a local workstation). The client simulates a
    * front-end app (or phone app) which an end-user interacts with.
    */
-  private static int runClient(List<String> args) throws IOException {
+  private static int runClient(List<String> args) throws Exception {
     System.out.println("[INFO] Running as client");
 
     //
@@ -155,18 +150,6 @@ public class Program {
       return showUsageInformation("Missing broker URL");
     }
 
-    //
-    // Get tokens from broker.
-    //
-    var tokens = (List<RequestToken>)new NetHttpTransport()
-      .createRequestFactory()
-      .buildGetRequest(new GenericUrl(brokerUrl))
-      .setParser(new JsonObjectParser(GsonFactory.getDefaultInstance()))
-      .execute()
-      .parseAs(new TypeToken<List<RequestToken>>() {}.getType());
-
-    System.out.printf("Received %d tokens from broker", tokens.size());
-
-    return 0;
+    return new Client(brokerUrl, debug).run();
   }
 }
