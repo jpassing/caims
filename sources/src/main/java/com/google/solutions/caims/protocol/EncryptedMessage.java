@@ -22,7 +22,7 @@ public class EncryptedMessage {
    */
   private final @NotNull byte[] cipherText;
 
-  EncryptedMessage(@NotNull byte[] cipherText) {
+  public EncryptedMessage(@NotNull byte[] cipherText) {
     this.cipherText = cipherText;
   }
 

@@ -6,6 +6,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
 import com.google.common.reflect.TypeToken;
+import com.google.crypto.tink.subtle.Base64;
 import com.google.solutions.caims.AbstractServer;
 import com.google.solutions.caims.protocol.EncryptedMessage;
 import com.google.solutions.caims.workload.AttestationToken;
@@ -53,7 +54,7 @@ public class Broker extends AbstractServer {
 
   /**
    * Take a random sample of registrations and return a token for each. Clients
-   * can then use one or more of these tokens to make requests to the forward-
+   * can then use one or more of these tokens to make requests to the /forward
    * endpoint.
    */
   private List<RequestToken> getTokens() {
@@ -86,7 +87,7 @@ public class Broker extends AbstractServer {
       //
       AttestationToken.Payload tokenPayload;
       try {
-        tokenPayload = request.token
+        tokenPayload = request.requestToken()
           .attestationToken()
           .verify(
             this.brokerId.toString(),
@@ -132,7 +133,7 @@ public class Broker extends AbstractServer {
           .createRequestFactory()
             .buildPostRequest(url, new ByteArrayContent(
               "binary/octet-stream",
-              request.message.cipherText()))
+              request.encryptedMessage().cipherText()))
             .setThrowExceptionOnExecuteError(true)
             .execute();
 
@@ -182,9 +183,26 @@ public class Broker extends AbstractServer {
 
   /**
    * Request to a particular workload.
+   *
+   * @param token Request token
+   * @param message Encrypted message, base64-encoded
    */
   public record WorkloadRequest(
-    @NotNull RequestToken token,
-    @NotNull EncryptedMessage message
-  ) {}
+    @NotNull String token,
+    @NotNull String message
+  ) {
+    public WorkloadRequest(
+      @NotNull RequestToken token,
+      @NotNull EncryptedMessage message) {
+      this(token.attestationToken().token(), Base64.encode(message.cipherText()));
+    }
+
+    @NotNull RequestToken requestToken() {
+      return  new RequestToken(this.token);
+    }
+
+    @NotNull EncryptedMessage encryptedMessage() {
+      return new EncryptedMessage(Base64.decode(this.message));
+    }
+  }
 }

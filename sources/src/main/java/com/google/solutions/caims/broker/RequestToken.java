@@ -29,4 +29,8 @@ import org.jetbrains.annotations.NotNull;
 public record RequestToken(
   @NotNull AttestationToken attestationToken
   ) {
+
+  public RequestToken(@NotNull String token) {
+    this(new AttestationToken(token));
+  }
 }

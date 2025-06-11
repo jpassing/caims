@@ -22,6 +22,7 @@ import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.*;
@@ -42,7 +43,7 @@ public class Client {
   private List<RequestToken> getTokens() throws IOException {
     var response = HTTP_FACTORY
       .buildGetRequest(new GenericUrl(this.endpoint.url()))
-      .setParser(new JsonObjectParser(GsonFactory.getDefaultInstance()))
+      .setParser(new JsonObjectParser(GSON_FACTORY))
       .execute();
 
     try (var reader = new InputStreamReader(response.getContent(), response.getContentCharset())) {
@@ -54,7 +55,7 @@ public class Client {
     var response = HTTP_FACTORY
       .buildPostRequest(
         new GenericUrl(this.endpoint.url() + "forward"),
-        new JsonHttpContent(GSON_FACTORY, requests))
+        new ByteArrayContent("aplication/json", GSON.toJson(requests).getBytes(StandardCharsets.UTF_8)))
       .execute();
 
     try (var stream = new DataInputStream(response.getContent())) {

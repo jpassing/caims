@@ -105,11 +105,16 @@ public class Program {
 
     var metadataClient = new MetadataClient();
     var projectMetadata = metadataClient.getProjectMetadata();
+    var instanceMetadata = metadataClient.getInstanceMetadata();
+    
+    //var projectMetadata = new GenericJson()
+    //  .set("projectId", "jpassing-ar-cs-1")
+    //  .set("numericProjectId", "1"); // TODO: add switch
+    //var instanceMetadata = new GenericJson()
+    //  .set("zone", "/asia-southeast1-a"); // TODO: add switch
 
     var broker = new Broker(
-      getBrokerEndpoint(
-        projectMetadata,
-        metadataClient.getInstanceMetadata()),
+      getBrokerEndpoint(projectMetadata, instanceMetadata),
       Optional
         .ofNullable(System.getenv("PORT"))
         .map(Integer::parseInt)
