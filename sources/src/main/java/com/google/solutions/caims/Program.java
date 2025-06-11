@@ -162,10 +162,8 @@ public class Program {
     @NotNull GenericData instanceMetadata
   ) {
     var zone = instanceMetadata.get("zone").toString();
+    var region = zone.substring(zone.lastIndexOf('/') + 1, zone.length() - 2);
     var projectNumber = projectMetadata.get("numericProjectId").toString();
-
-    return new Broker.Endpoint(
-      projectNumber,
-      zone.substring(0, zone.length() - 2));
+    return new Broker.Endpoint(projectNumber, region);
   }
 }
