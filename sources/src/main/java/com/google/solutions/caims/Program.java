@@ -48,20 +48,22 @@ public class Program {
         System.exit(runClient(Arrays.stream(args).skip(1).toList()));
       }
       case "broker": {
-        System.exit(runBroker());
+        startBroker();
       }
       case "workload": {
-        System.exit(runWorkload());
+        startWorkload();
       }
       default:
-        System.exit(showUsageInformation());
+        System.exit(showUsageInformation("Unrecognized action"));
     }
   }
 
   /**
    * Show usage information for the command line app.
    */
-  private static int showUsageInformation() {
+  private static int showUsageInformation(String message) {
+    System.err.println(message);
+    System.err.println();
     System.err.println("Supported actions are:");
     System.err.println("  client:    Run client application");
     System.err.println("     ---broker URL   URL of broker to use (required)");
@@ -76,7 +78,7 @@ public class Program {
    * receives E2E-encrypted inference requests from the broker and evaluates
    * them.
    */
-  private static int runWorkload() throws IOException, GeneralSecurityException {
+  private static void startWorkload() throws IOException, GeneralSecurityException {
     System.out.println("[INFO] Running as workload");
 
     var metadataClient = new MetadataClient();
@@ -91,8 +93,6 @@ public class Program {
 
     daemon.start();
     server.start();
-
-    return 0;
   }
 
   /**
@@ -100,7 +100,7 @@ public class Program {
    * available workload instances and forwards E2E-encrypted
    * inference requests from the client to workload instances.
    */
-  private static int runBroker() throws IOException, GeneralSecurityException {
+  private static void startBroker() throws IOException, GeneralSecurityException {
     System.out.println("[INFO] Running as broker");
 
     var metadata = new GenericJson()
@@ -124,8 +124,6 @@ public class Program {
 
     discoveryDaemon.start();
     broker.start();
-
-    return 0;
   }
 
   /**
@@ -145,15 +143,16 @@ public class Program {
         debug = true;
       }
       else if ("--broker".equals(args.get(i)) && i < args.size() - 1) {
-       brokerUrl = args.get(i + i);
+       brokerUrl = args.get(i + 1);
+       i++; // Skip the next argument, which is the URL.
       }
       else {
-        return showUsageInformation();
+        return showUsageInformation("Unrecognized argument");
       }
     }
 
     if (brokerUrl == null) {
-      return showUsageInformation();
+      return showUsageInformation("Missing broker URL");
     }
 
     //
@@ -167,7 +166,7 @@ public class Program {
       .parseAs(new TypeToken<List<RequestToken>>() {}.getType());
 
     System.out.printf("Received %d tokens from broker", tokens.size());
-    
+
     return 0;
   }
 }
