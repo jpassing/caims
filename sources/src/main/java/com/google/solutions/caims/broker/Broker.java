@@ -30,20 +30,16 @@ public class Broker extends AbstractServer {
   /** Max number of request tokens returned to a client */
   private final int maxRequestTokens;
 
-  private final boolean requireProductionAttestations;
-
   public Broker(
     @NotNull Identifier brokerId,
     int listenPort,
     int threadPoolSize,
-    int maxRequestTokens,
-    boolean requireProductionAttestations
+    int maxRequestTokens
   ) throws IOException {
     super(listenPort, threadPoolSize);
 
     this.brokerId = brokerId;
     this.maxRequestTokens = maxRequestTokens;
-    this.requireProductionAttestations = requireProductionAttestations;
 
     //
     // Register HTTP endpoints.
@@ -85,13 +81,16 @@ public class Broker extends AbstractServer {
       // Verify token to ensure the request is legitimate and to find out
       // which instance it belongs to.
       //
+      // NB. Here, we don't care whether attestation are production or
+      //     debug - this is up to the client to decide.
+      //
       AttestationToken.Payload tokenPayload;
       try {
         tokenPayload = item.getKey()
           .attestationToken()
           .verify(
             this.brokerId.toString(),
-            this.requireProductionAttestations);
+            false);
       }
       catch (TokenVerifier.VerificationException e) {
         //
