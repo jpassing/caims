@@ -24,10 +24,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Client {
   private static final SecureRandom RANDOM = new SecureRandom();
@@ -53,11 +50,11 @@ public class Client {
     }
   }
 
-  private EncryptedMessage forward(Map<RequestToken, EncryptedMessage> request) throws IOException {
+  private EncryptedMessage forward(List<Broker.WorkloadRequest> requests) throws IOException {
     var response = HTTP_FACTORY
       .buildPostRequest(
         new GenericUrl(this.endpoint.url() + "forward"),
-        new JsonHttpContent(GSON_FACTORY, request))
+        new JsonHttpContent(GSON_FACTORY, requests))
       .execute();
 
     try (var stream = new DataInputStream(response.getContent())) {
@@ -98,7 +95,7 @@ public class Client {
         //
         System.out.println("[INFO] Selecting a random subset of tokens");
 
-        var request = new HashMap<RequestToken, EncryptedMessage>();
+        var requests = new LinkedList<Broker.WorkloadRequest>();
         for (var token : tokens.stream()
           .sorted(Comparator.comparingDouble(x -> RANDOM.nextInt(32)))
           .limit(5)
@@ -116,13 +113,13 @@ public class Client {
           //
           // Encrypt the prompt for the specific workload instance.
           //
-          request.put(
+          requests.add(new Broker.WorkloadRequest(
             token,
-            new Message(prompt, keyPair.publicKey()).encrypt(requestEncryptionKey));
+            new Message(prompt, keyPair.publicKey()).encrypt(requestEncryptionKey)));
         }
 
         var clearTextResponse = this
-          .forward(request)
+          .forward(requests)
           .decrypt(keyPair.privateKey())
           .toString();
 

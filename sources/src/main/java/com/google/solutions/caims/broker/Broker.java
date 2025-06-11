@@ -47,8 +47,8 @@ public class Broker extends AbstractServer {
     this.mapGetJson("/", () -> getTokens());
     this.mapPostJson(
       "/forward",
-      new TypeToken<Map<RequestToken, EncryptedMessage>>() {}.getType(),
-      (Map<RequestToken, EncryptedMessage> request) -> forwardInferenceRequest(request));
+      new TypeToken<List<WorkloadRequest>>() {}.getType(),
+      (List<WorkloadRequest> request) -> forwardInferenceRequest(request));
   }
 
   /**
@@ -72,11 +72,11 @@ public class Broker extends AbstractServer {
    * workload instance.
    */
   private @Nullable EncryptedMessage forwardInferenceRequest(
-    @NotNull Map<RequestToken, EncryptedMessage> requests
+    @NotNull List<WorkloadRequest> requests
   )  {
     Preconditions.checkNotNull(requests, "requests");
 
-    for (var item : requests.entrySet()) {
+    for (var request : requests) {
       //
       // Verify token to ensure the request is legitimate and to find out
       // which instance it belongs to.
@@ -86,7 +86,7 @@ public class Broker extends AbstractServer {
       //
       AttestationToken.Payload tokenPayload;
       try {
-        tokenPayload = item.getKey()
+        tokenPayload = request.token
           .attestationToken()
           .verify(
             this.brokerId.toString(),
@@ -132,7 +132,7 @@ public class Broker extends AbstractServer {
           .createRequestFactory()
             .buildPostRequest(url, new ByteArrayContent(
               "binary/octet-stream",
-              item.getValue().cipherText()))
+              request.message.cipherText()))
             .setThrowExceptionOnExecuteError(true)
             .execute();
 
@@ -179,4 +179,12 @@ public class Broker extends AbstractServer {
     @NotNull String instanceName,
     @NotNull AttestationToken attestationToken
     ) {}
+
+  /**
+   * Request to a particular workload.
+   */
+  public record WorkloadRequest(
+    @NotNull RequestToken token,
+    @NotNull EncryptedMessage message
+  ) {}
 }
