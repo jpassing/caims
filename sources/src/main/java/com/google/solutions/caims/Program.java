@@ -106,7 +106,7 @@ public class Program {
     var metadataClient = new MetadataClient();
     var projectMetadata = metadataClient.getProjectMetadata();
     var instanceMetadata = metadataClient.getInstanceMetadata();
-    
+
     //var projectMetadata = new GenericJson()
     //  .set("projectId", "jpassing-ar-cs-1")
     //  .set("numericProjectId", "1"); // TODO: add switch

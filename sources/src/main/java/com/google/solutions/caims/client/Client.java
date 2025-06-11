@@ -67,13 +67,19 @@ public class Client {
     //
     // Get tokens from broker.
     //
-    var tokens = getTokens();
+    List<RequestToken> tokens = null;
+    while (tokens == null) {
+      tokens = getTokens();
+      if (tokens.isEmpty()) {
+        System.err.println(
+          "Waiting for workload instances to become available...");
 
-    if (tokens.isEmpty()) {
-      System.err.println(
-        "The broker did not return any tokens. This indicates that there is " +
-        "no workload instance available to serve inference requests.");
-      return 1;
+        try {
+          Thread.sleep(5000);
+        }
+        catch (InterruptedException ignored) {
+        }
+      }
     }
 
     System.out.printf("Received %d tokens from broker\n", tokens.size());

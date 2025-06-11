@@ -68,6 +68,7 @@ public class Workload extends AbstractServer {
       return response.encrypt(request.senderPublicKey());
     }
     catch (GeneralSecurityException | IOException e) {
+      e.printStackTrace();
       throw new RuntimeException(e);
     }
   }
