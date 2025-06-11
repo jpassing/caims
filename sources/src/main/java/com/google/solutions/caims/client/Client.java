@@ -120,9 +120,9 @@ public class Client {
           //
           // Encrypt the prompt for the specific workload instance.
           //
-          requests.add(new Broker.WorkloadRequest(
-            token,
-            new Message(prompt, keyPair.publicKey()).encrypt(requestEncryptionKey)));
+          var message = new Message(prompt, keyPair.publicKey())
+            .encrypt(requestEncryptionKey);
+          requests.add(new Broker.WorkloadRequest(token, message));
         }
 
         var clearTextResponse = this

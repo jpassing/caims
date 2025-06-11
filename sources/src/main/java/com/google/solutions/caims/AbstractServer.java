@@ -154,8 +154,7 @@ public abstract class AbstractServer {
           return;
         }
 
-        try (var requestStream = new DataInputStream(exchange.getRequestBody());
-             var responseStream = new DataOutputStream(exchange.getResponseBody())) {
+        try (var requestStream = new DataInputStream(exchange.getRequestBody())) {
           //
           // Parse request.
           //
@@ -167,7 +166,10 @@ public abstract class AbstractServer {
           //
           var responseMessage = handler.apply(requestMessage);
           exchange.sendResponseHeaders(200, 0);
-          responseMessage.write(responseStream);
+
+          try (var responseStream = new DataOutputStream(exchange.getResponseBody())) {
+            responseMessage.write(responseStream);
+          }
         }
         catch (IllegalArgumentException e) {
           exchange.sendResponseHeaders(400, 0);
