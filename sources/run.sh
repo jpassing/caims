@@ -6,7 +6,7 @@ else
     EXEC_ARGS_PARAM=""
 fi
 
-mvn -q compile exec:java ${EXEC_ARGS_PARAM}
+mvn -e -q compile exec:java ${EXEC_ARGS_PARAM}
 
 if [ "$?" -ne 0 ]; then
     echo "The command failed."

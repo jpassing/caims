@@ -14,7 +14,7 @@ if "%~1" NEQ "" (
     set "EXEC_ARGS=%EXEC_ARGS:~0,-1%"
 )
 
-mvn -q compile exec:java -Dexec.args="%EXEC_ARGS%"
+mvn -e -q compile exec:java -Dexec.args="%EXEC_ARGS%"
 
 if %errorlevel% neq 0 (
     echo Command failed with error code %errorlevel%.

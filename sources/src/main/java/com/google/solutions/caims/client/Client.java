@@ -4,6 +4,7 @@ import com.google.api.client.http.ByteArrayContent;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.http.json.JsonHttpContent;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.auth.oauth2.TokenVerifier;
@@ -24,10 +25,13 @@ import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Client {
   private static final SecureRandom RANDOM = new SecureRandom();
+  private static final GsonFactory GSON_FACTORY = new GsonFactory();
   private static final Gson GSON = new Gson();
   private static final HttpRequestFactory HTTP_FACTORY = new NetHttpTransport().createRequestFactory();
   private final @NotNull Broker.Endpoint endpoint;
@@ -49,11 +53,11 @@ public class Client {
     }
   }
 
-  private EncryptedMessage forward(EncryptedMessage request) throws IOException {
+  private EncryptedMessage forward(Map<RequestToken, EncryptedMessage> request) throws IOException {
     var response = HTTP_FACTORY
       .buildPostRequest(
         new GenericUrl(this.endpoint.url() + "forward"),
-        new ByteArrayContent("binary/octet-stream", request.cipherText()))
+        new JsonHttpContent(GSON_FACTORY, request))
       .execute();
 
     try (var stream = new DataInputStream(response.getContent())) {
@@ -90,33 +94,37 @@ public class Client {
         }
 
         //
-        // Randomly select one token.
+        // Select a random subset of tokens and prepare a request for each.
         //
-        System.out.println("[INFO] Selecting a random token");
-        var token = tokens.stream()
+        System.out.println("[INFO] Selecting a random subset of tokens");
+
+        var request = new HashMap<RequestToken, EncryptedMessage>();
+        for (var token : tokens.stream()
           .sorted(Comparator.comparingDouble(x -> RANDOM.nextInt(32)))
-          .findFirst()
-          .get();
-
-        AttestationToken.Payload attestationTokenPayload;
-        try {
-          attestationTokenPayload = token
+          .limit(5)
+          .toList()
+        ) {
+          //
+          // Each token corresponds to a workload instance. Verify the token
+          // and extract the public key of the workload instance.
+          //
+          var requestEncryptionKey = token
             .attestationToken()
-            .verify(this.endpoint.url(), !this.debug);
-        }
-        catch (TokenVerifier.VerificationException e) {
-          System.err.printf("[ERROR] Verifying the token failed: %s\n", e.getMessage());
-          continue;
+            .verify(this.endpoint.url(), !this.debug)
+            .requestEncryptionKey();
+
+          //
+          // Encrypt the prompt for the specific workload instance.
+          //
+          request.put(
+            token,
+            new Message(prompt, keyPair.publicKey()).encrypt(requestEncryptionKey));
         }
 
-        //
-        // Wrap prompt in an encrypted message.
-        //
-        var clearTextMessage = new Message(prompt, keyPair.publicKey());
-        var encryptedMessage = clearTextMessage.encrypt(attestationTokenPayload.requestEncryptionKey());
-
-        var encryptedResponse = forward(encryptedMessage);
-        var clearTextResponse = encryptedResponse.decrypt(keyPair.privateKey()).toString();
+        var clearTextResponse = this
+          .forward(request)
+          .decrypt(keyPair.privateKey())
+          .toString();
 
         System.out.println(clearTextResponse);
         System.out.println();
