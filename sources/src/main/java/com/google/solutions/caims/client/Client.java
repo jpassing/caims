@@ -125,8 +125,9 @@ public class Client {
           requests.add(new Broker.WorkloadRequest(token, message));
         }
 
-        var clearTextResponse = this
-          .forward(requests)
+        var response = forward(requests);
+
+        var clearTextResponse = response
           .decrypt(keyPair.privateKey())
           .toString();
 

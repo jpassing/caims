@@ -61,11 +61,16 @@ public class Workload extends AbstractServer {
       // encrypted it using the client's key.
       //
       var response = new Message(
-        String.format(
-          "> %s\nThat's a good question.",
-          request.toString()),
+        String.format("> %s\nThat's a good question.", request),
         null);
-      return response.encrypt(request.senderPublicKey());
+
+      var encryptedResponse = response.encrypt(request.senderPublicKey());
+
+      System.out.printf(
+        "[INFO] Finished inference request (response size: %d bytes)\n",
+        encryptedRequest.cipherText().length);
+
+      return encryptedResponse;
     }
     catch (GeneralSecurityException | IOException e) {
       e.printStackTrace();
