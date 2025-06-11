@@ -1,29 +1,20 @@
 package com.google.solutions.caims.broker;
 
-import com.google.api.client.json.gson.GsonFactory;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
 import com.google.common.reflect.TypeToken;
-import com.google.gson.Gson;
 import com.google.solutions.caims.AbstractServer;
 import com.google.solutions.caims.protocol.EncryptedMessage;
 import com.google.solutions.caims.workload.AttestationToken;
-import com.sun.net.httpserver.HttpServer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.InetSocketAddress;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
-import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class Broker extends AbstractServer {
   private static final SecureRandom RANDOM = new SecureRandom();
@@ -50,8 +41,11 @@ public class Broker extends AbstractServer {
     this.maxRequestTokens = maxRequestTokens;
     this.requireProductionAttestations = requireProductionAttestations;
 
-    this.mapGet("/", () -> handleTokensRequest());
-    this.<Map<RequestToken, EncryptedMessage>, EncryptedMessage>mapPost(
+    //
+    // Register HTTP endpoints.
+    //
+    this.mapGetJson("/", () -> handleTokensRequest());
+    this.<Map<RequestToken, EncryptedMessage>, EncryptedMessage>mapPostJson(
       "/forward",
       new TypeToken<Map<RequestToken, EncryptedMessage>>() {}.getType(),
       (Map<RequestToken, EncryptedMessage> request) -> handleInferenceRequest(request));

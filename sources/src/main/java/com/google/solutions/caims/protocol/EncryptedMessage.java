@@ -2,7 +2,10 @@ package com.google.solutions.caims.protocol;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.security.GeneralSecurityException;
 
 /**

@@ -3,10 +3,12 @@ package com.google.solutions.caims.protocol;
 import com.google.crypto.tink.*;
 import com.google.crypto.tink.hybrid.HybridKeyTemplates;
 import com.google.crypto.tink.proto.KeyTemplate;
-import org.jetbrains.annotations.NotNull;
 import com.google.crypto.tink.subtle.Base64;
+import org.jetbrains.annotations.NotNull;
 
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.security.GeneralSecurityException;
 
 /**
