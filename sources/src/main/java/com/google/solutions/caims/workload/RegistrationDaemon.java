@@ -11,14 +11,14 @@ public class RegistrationDaemon extends Thread {
   public static final String GUEST_ATTRIBUTE_NAMESPACE = "workload-server";
   public static final String GUEST_ATTRIBUTE_NAME = "token";
 
-  private final @NotNull Broker.Identifier brokerId;
+  private final @NotNull Broker.Endpoint brokerId;
   private final @NotNull Workload server;
   private final @NotNull ConfidentialSpace confidentialSpace;
   private final @NotNull MetadataClient metadataClient;
 
 
   public RegistrationDaemon(
-    @NotNull Broker.Identifier brokerId,
+    @NotNull Broker.Endpoint brokerId,
     @NotNull Workload server,
     @NotNull ConfidentialSpace confidentialSpace,
     @NotNull MetadataClient metadataClient

@@ -1,6 +1,7 @@
 package com.google.solutions.caims;
 
 import com.google.api.client.json.GenericJson;
+import com.google.api.client.util.GenericData;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.crypto.tink.hybrid.HybridConfig;
 import com.google.solutions.caims.broker.Broker;
@@ -10,6 +11,7 @@ import com.google.solutions.caims.workload.ConfidentialSpace;
 import com.google.solutions.caims.workload.MetadataClient;
 import com.google.solutions.caims.workload.RegistrationDaemon;
 import com.google.solutions.caims.workload.Workload;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -81,7 +83,7 @@ public class Program {
 
     var server = new Workload(8080, 10);
     var daemon = new RegistrationDaemon(
-      new Broker.Identifier(metadata.get("numericProjectId").toString()),
+      getBrokerEndpoint(metadata),
       server,
       new ConfidentialSpace(),
       metadataClient);
@@ -104,8 +106,7 @@ public class Program {
     //var metadata = metadataClient.getInstanceMetadata();
 
     var broker = new Broker(
-      new Broker.Identifier(metadata.get("numericProjectId")
-        .toString()),
+      getBrokerEndpoint(metadata),
       Optional
         .ofNullable(System.getenv("PORT"))
         .map(Integer::parseInt)
@@ -150,6 +151,17 @@ public class Program {
       return showUsageInformation("Missing broker URL");
     }
 
-    return new Client(brokerUrl, debug).run();
+    return new Client(new Broker.Endpoint(brokerUrl), debug).run();
+  }
+
+  private static Broker.Endpoint getBrokerEndpoint(
+    @NotNull GenericData instanceMetadata
+  ) {
+    var zone = instanceMetadata.get("zone").toString();
+    var projectNumber = instanceMetadata.get("numericProjectId").toString();
+
+    return new Broker.Endpoint(
+      projectNumber,
+      zone.substring(0, zone.length() - 2));
   }
 }

@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class TestBroker {
   @Test
   public void idenfifier_toString() {
-    var id = new Broker.Identifier("123");
-    assertEquals("urn:com:google:solutions:caims:123", id.toString());
+    var id = new Broker.Endpoint("123", "us-central1");
+    assertEquals("https://broker-123.us-central1.run.app/", id.toString());
   }
 }

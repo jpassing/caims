@@ -22,7 +22,7 @@ import java.util.Set;
 
 public class Broker extends AbstractServer {
   private static final SecureRandom RANDOM = new SecureRandom();
-  private final @NotNull Broker.Identifier brokerId;
+  private final @NotNull Broker.Endpoint brokerId;
 
   /** Current set of registrations, continuously updated by the daemon */
   private volatile Set<Registration> registrations = Set.of();
@@ -31,7 +31,7 @@ public class Broker extends AbstractServer {
   private final int maxRequestTokens;
 
   public Broker(
-    @NotNull Identifier brokerId,
+    @NotNull Broker.Endpoint brokerId,
     int listenPort,
     int threadPoolSize,
     int maxRequestTokens
@@ -154,15 +154,20 @@ public class Broker extends AbstractServer {
   }
 
   /**
-   * Unique identifier of the broker, used as audience in tokens.
-   * @param projectNumber
+   * Endpoint of the broker, used as audience in tokens.
    */
-  public record Identifier(
-    @NotNull String projectNumber
+  public record Endpoint(
+    @NotNull String url
   ) {
+    public Endpoint(
+      @NotNull String projectNumber,
+      @NotNull String region
+    ) {
+      this(String.format("https://broker-%s.%s.run.app/", projectNumber, region));
+    }
     @Override
     public String toString() {
-      return String.format("urn:com:google:solutions:caims:%s", this.projectNumber);
+      return this.url;
     }
   }
   /**
