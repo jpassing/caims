@@ -13,6 +13,10 @@ import java.security.GeneralSecurityException;
  * recipient.
  */
 public class EncryptedMessage {
+
+  /** Maximum allowed size for a message */
+  private static final int MAX_SIZE = 1024;
+
   /**
    * Message body, encrypted.
    */
@@ -20,6 +24,13 @@ public class EncryptedMessage {
 
   EncryptedMessage(@NotNull byte[] cipherText) {
     this.cipherText = cipherText;
+  }
+
+  /**
+   * Get raw cipher text.
+   */
+  public byte[] cipherText() {
+    return cipherText;
   }
 
   /**
@@ -35,6 +46,15 @@ public class EncryptedMessage {
     }
 
     return new EncryptedMessage(stream.readNBytes(length));
+  }
+
+  /**
+    * Read encrypted message from a stream.
+    */
+  public static @NotNull EncryptedMessage read(
+    @NotNull DataInputStream stream
+  ) throws IOException {
+    return read(stream, MAX_SIZE);
   }
 
   /**

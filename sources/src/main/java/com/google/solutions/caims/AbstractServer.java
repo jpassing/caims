@@ -74,6 +74,7 @@ public abstract class AbstractServer {
           exchange.sendResponseHeaders(500, 0);
           writer.write("Internal server error");
           System.err.printf("[ERROR] %s\n", e.getMessage());
+          e.printStackTrace();
         }
       }
     });
@@ -121,11 +122,13 @@ public abstract class AbstractServer {
           exchange.sendResponseHeaders(400, 0);
           writer.write("Invalid arguments");
           System.err.printf("[ERROR] %s\n", e.getMessage());
+          e.printStackTrace();
         }
         catch (Exception e) {
           exchange.sendResponseHeaders(500, 0);
           writer.write("Internal server error");
           System.err.printf("[ERROR] %s\n", e.getMessage());
+          e.printStackTrace();
         }
       }
     });
@@ -133,12 +136,10 @@ public abstract class AbstractServer {
 
   protected void mapPostEncrypted(
     @NotNull String path,
-    int maxMessageSize,
     @NotNull Function<EncryptedMessage, EncryptedMessage> handler
   ) {
     this.server.createContext(path, exchange -> {
       try (
-        var reader = new InputStreamReader(exchange.getRequestBody());
         var writer = new OutputStreamWriter(exchange.getResponseBody(), CHARSET)
       ) {
         exchange
@@ -158,7 +159,7 @@ public abstract class AbstractServer {
           //
           // Parse request.
           //
-          var requestMessage = EncryptedMessage.read(requestStream, maxMessageSize);
+          var requestMessage = EncryptedMessage.read(requestStream);
           Preconditions.checkArgument(requestMessage != null);
 
           //
@@ -172,11 +173,13 @@ public abstract class AbstractServer {
           exchange.sendResponseHeaders(400, 0);
           writer.write("Invalid arguments");
           System.err.printf("[ERROR] %s\n", e.getMessage());
+          e.printStackTrace();
         }
         catch (Exception e) {
           exchange.sendResponseHeaders(500, 0);
           writer.write("Internal server error");
           System.err.printf("[ERROR] %s\n", e.getMessage());
+          e.printStackTrace();
         }
       }
     });

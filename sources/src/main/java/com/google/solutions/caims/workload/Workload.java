@@ -16,9 +16,6 @@ import java.security.GeneralSecurityException;
 public class Workload extends AbstractServer {
   /** The server's key pair, used for en/decrypting messages */
   private final @NotNull RequestEncryptionKeyPair keyPair;
-
-  /** Maximum allowed size for a message */
-  private static final int MAX_MESSAGE_SIZE = 1024;
   
   public @NotNull RequestEncryptionKeyPair.PublicKey publicKey() {
     return this.keyPair.publicKey();
@@ -40,10 +37,7 @@ public class Workload extends AbstractServer {
     //
     // Register HTTP endpoints.
     //
-    this.mapPostEncrypted(
-      "/",
-      MAX_MESSAGE_SIZE,
-      request -> handleInferenceRequest(request));
+    this.mapPostEncrypted("/", request -> handleInferenceRequest(request));
   }
 
   private EncryptedMessage handleInferenceRequest(

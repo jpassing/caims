@@ -1,5 +1,8 @@
 package com.google.solutions.caims.broker;
 
+import com.google.api.client.http.ByteArrayContent;
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
 import com.google.common.reflect.TypeToken;
@@ -9,6 +12,7 @@ import com.google.solutions.caims.workload.AttestationToken;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Comparator;
@@ -113,7 +117,31 @@ public class Broker extends AbstractServer {
         continue;
       }
 
-      // TODO: Forward request to instance
+      //
+      // Forward request.
+      //
+      var url = new GenericUrl(String.format(
+        "http://%s.%s.c.%s.internal:8080/",
+        registration.get().instanceName,
+        registration.get().zone,
+        registration.get().projectId));
+
+      System.out.printf("[INFO] Forwarding inference request to %s\n", url);
+
+      try {
+        var response = new NetHttpTransport()
+          .createRequestFactory()
+            .buildPostRequest(url, new ByteArrayContent(
+              "binary/octet-stream",
+              item.getValue().cipherText()))
+            .setThrowExceptionOnExecuteError(true)
+            .execute();
+
+        return EncryptedMessage.read(new DataInputStream(response.getContent()));
+      }
+      catch (IOException e) {
+        throw new RuntimeException(e);
+      }
     }
 
     throw new IllegalArgumentException(
