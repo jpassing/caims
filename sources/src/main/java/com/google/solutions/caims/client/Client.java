@@ -47,7 +47,7 @@ public class Client {
       .execute();
 
     try (var reader = new InputStreamReader(response.getContent(), response.getContentCharset())) {
-      return (List<RequestToken>)GSON.fromJson(reader, new TypeToken<List<RequestToken>>() {}.getType());
+      return GSON.fromJson(reader, new TypeToken<List<RequestToken>>() {}.getType());
     }
   }
 
@@ -55,12 +55,12 @@ public class Client {
     var response = HTTP_FACTORY
       .buildPostRequest(
         new GenericUrl(this.endpoint.url() + "forward"),
-        new ByteArrayContent("aplication/json", GSON.toJson(requests).getBytes(StandardCharsets.UTF_8)))
-      .execute();
+        new ByteArrayContent("application/json", GSON.toJson(requests).getBytes(StandardCharsets.UTF_8)))
+      .setParser(new JsonObjectParser(GSON_FACTORY))
+      .execute()
+      .parseAs(Broker.WorkloadResponse.class);
 
-    try (var stream = response.getContent()) {
-      return new EncryptedMessage(stream.readAllBytes());
-    }
+    return response.encryptedMessage();
   }
 
   public int run() throws Exception {

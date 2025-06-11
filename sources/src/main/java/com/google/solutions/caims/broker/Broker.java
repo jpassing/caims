@@ -72,7 +72,7 @@ public class Broker extends AbstractServer {
    * Dispatch an encrypted inference requests by forwarding it to an available
    * workload instance.
    */
-  private @Nullable EncryptedMessage forwardInferenceRequest(
+  private @Nullable WorkloadResponse forwardInferenceRequest(
     @NotNull List<WorkloadRequest> requests
   )  {
     Preconditions.checkNotNull(requests, "requests");
@@ -141,7 +141,7 @@ public class Broker extends AbstractServer {
             .execute();
 
         try (var stream = response.getContent()) {
-          return new EncryptedMessage(stream.readAllBytes());
+          return new WorkloadResponse(new EncryptedMessage(stream.readAllBytes()));
         }
       }
       catch (IOException e) {
@@ -211,6 +211,22 @@ public class Broker extends AbstractServer {
     }
 
     @NotNull EncryptedMessage encryptedMessage() {
+      return new EncryptedMessage(Base64.decode(this.message));
+    }
+  }
+
+  /**
+   *
+   * @param message Encrypted message, base64-encoded
+   */
+  public record WorkloadResponse(
+    @NotNull String message
+  ) {
+    public WorkloadResponse(EncryptedMessage message) {
+      this(Base64.encode(message.cipherText()));
+    }
+
+    public @NotNull EncryptedMessage encryptedMessage() {
       return new EncryptedMessage(Base64.decode(this.message));
     }
   }
