@@ -154,11 +154,11 @@ public abstract class AbstractServer {
           return;
         }
 
-        try (var requestStream = new DataInputStream(exchange.getRequestBody())) {
+        try (var requestStream = exchange.getRequestBody()) {
           //
           // Parse request.
           //
-          var requestMessage = EncryptedMessage.read(requestStream);
+          var requestMessage = new EncryptedMessage(requestStream.readAllBytes());
           Preconditions.checkArgument(requestMessage != null);
 
           //
