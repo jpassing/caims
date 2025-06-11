@@ -79,11 +79,12 @@ public class Program {
     System.out.println("[INFO] Running as workload");
 
     var metadataClient = new MetadataClient();
-    var metadata = metadataClient.getInstanceMetadata();
 
     var server = new Workload(8080, 10);
     var daemon = new RegistrationDaemon(
-      getBrokerEndpoint(metadata),
+      getBrokerEndpoint(
+        metadataClient.getProjectMetadata(),
+        metadataClient.getInstanceMetadata()),
       server,
       new ConfidentialSpace(),
       metadataClient);
@@ -100,13 +101,13 @@ public class Program {
   private static void startBroker() throws IOException, GeneralSecurityException {
     System.out.println("[INFO] Running as broker");
 
-    var metadata = new GenericJson()
-      .set("projectId", "jpassing-ar-cs-1")
-      .set("numericProjectId", "1"); // TODO: add switch
-    //var metadata = metadataClient.getInstanceMetadata();
+    var metadataClient = new MetadataClient();
+    var projectMetadata = metadataClient.getProjectMetadata();
 
     var broker = new Broker(
-      getBrokerEndpoint(metadata),
+      getBrokerEndpoint(
+        projectMetadata,
+        metadataClient.getInstanceMetadata()),
       Optional
         .ofNullable(System.getenv("PORT"))
         .map(Integer::parseInt)
@@ -116,7 +117,7 @@ public class Program {
     var discoveryDaemon = new DiscoveryDaemon(
       broker,
       GoogleCredentials.getApplicationDefault(),
-      metadata.get("projectId").toString());
+      projectMetadata.get("projectId").toString());
 
     discoveryDaemon.start();
     broker.start();
@@ -155,10 +156,11 @@ public class Program {
   }
 
   private static Broker.Endpoint getBrokerEndpoint(
+    @NotNull GenericData projectMetadata,
     @NotNull GenericData instanceMetadata
   ) {
     var zone = instanceMetadata.get("zone").toString();
-    var projectNumber = instanceMetadata.get("numericProjectId").toString();
+    var projectNumber = projectMetadata.get("numericProjectId").toString();
 
     return new Broker.Endpoint(
       projectNumber,
