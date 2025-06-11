@@ -13,12 +13,10 @@ import com.google.solutions.caims.workload.AttestationToken;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class Broker extends AbstractServer {
@@ -226,7 +224,7 @@ public class Broker extends AbstractServer {
       this(Base64.encode(message.cipherText()));
     }
 
-    public @NotNull EncryptedMessage encryptedMessage() {
+    public @NotNull EncryptedMessage toEncryptedMessage() {
       return new EncryptedMessage(Base64.decode(this.message));
     }
   }

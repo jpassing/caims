@@ -4,10 +4,8 @@ import com.google.api.client.http.ByteArrayContent;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.http.json.JsonHttpContent;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.gson.GsonFactory;
-import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.solutions.caims.broker.Broker;
@@ -15,15 +13,12 @@ import com.google.solutions.caims.broker.RequestToken;
 import com.google.solutions.caims.protocol.EncryptedMessage;
 import com.google.solutions.caims.protocol.Message;
 import com.google.solutions.caims.protocol.RequestEncryptionKeyPair;
-import com.google.solutions.caims.workload.AttestationToken;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.*;
 
@@ -57,10 +52,14 @@ public class Client {
         new GenericUrl(this.endpoint.url() + "forward"),
         new ByteArrayContent("application/json", GSON.toJson(requests).getBytes(StandardCharsets.UTF_8)))
       .setParser(new JsonObjectParser(GSON_FACTORY))
-      .execute()
-      .parseAs(Broker.WorkloadResponse.class);
+      .execute();
 
-    return response.encryptedMessage();
+    try (var reader = new InputStreamReader(response.getContent(), response.getContentCharset())) {
+var l =       new BufferedReader(reader).readLine();
+      return GSON
+        .fromJson(reader, Broker.WorkloadResponse.class)
+        .toEncryptedMessage();
+    }
   }
 
   public int run() throws Exception {
