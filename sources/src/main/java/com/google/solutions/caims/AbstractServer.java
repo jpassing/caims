@@ -167,8 +167,8 @@ public abstract class AbstractServer {
           var responseMessage = handler.apply(requestMessage);
           exchange.sendResponseHeaders(200, 0);
 
-          try (var responseStream = new DataOutputStream(exchange.getResponseBody())) {
-            responseMessage.write(responseStream);
+          try (var responseStream = exchange.getResponseBody()) {
+            responseStream.write(responseMessage.cipherText());
           }
         }
         catch (IllegalArgumentException e) {

@@ -58,8 +58,8 @@ public class Client {
         new ByteArrayContent("aplication/json", GSON.toJson(requests).getBytes(StandardCharsets.UTF_8)))
       .execute();
 
-    try (var stream = new DataInputStream(response.getContent())) {
-      return EncryptedMessage.read(stream);
+    try (var stream = response.getContent()) {
+      return new EncryptedMessage(stream.readAllBytes());
     }
   }
 

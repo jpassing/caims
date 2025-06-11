@@ -140,7 +140,9 @@ public class Broker extends AbstractServer {
             .setThrowExceptionOnExecuteError(true)
             .execute();
 
-        return EncryptedMessage.read(new DataInputStream(response.getContent()));
+        try (var stream = response.getContent()) {
+          return new EncryptedMessage(stream.readAllBytes());
+        }
       }
       catch (IOException e) {
         System.err.printf(

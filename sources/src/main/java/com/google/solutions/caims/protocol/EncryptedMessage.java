@@ -33,44 +33,6 @@ public class EncryptedMessage {
     return cipherText;
   }
 
-  /**
-   * Read encrypted message from a stream.
-   */
-  public static @NotNull EncryptedMessage read(
-    @NotNull DataInputStream stream,
-    int maxSize
-  ) throws IOException {
-    var length = stream.readInt();
-    if (length == 0 || length > maxSize) {
-      throw new IOException(
-        String.format(
-          "The stream does not contain a valid message (size: %d bytes, available: %d)",
-          length,
-          stream.available()));
-    }
-
-    return new EncryptedMessage(stream.readNBytes(length));
-  }
-
-  /**
-    * Read encrypted message from a stream.
-    */
-  public static @NotNull EncryptedMessage read(
-    @NotNull DataInputStream stream
-  ) throws IOException {
-    return read(stream, MAX_SIZE);
-  }
-
-  /**
-   * Write encrypted message to a stream.
-   */
-  public void write(
-    @NotNull DataOutputStream stream
-  ) throws IOException {
-    stream.writeInt(this.cipherText.length);
-    stream.write(this.cipherText);
-  }
-
   public @NotNull Message decrypt(
     @NotNull RequestEncryptionKeyPair.PrivateKey recipientPrivateKey
   ) throws GeneralSecurityException, IOException {
