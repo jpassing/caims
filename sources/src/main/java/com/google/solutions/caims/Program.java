@@ -46,9 +46,11 @@ public class Program {
       }
       case "broker": {
         startBroker();
+        break;
       }
       case "workload": {
         startWorkload();
+        break;
       }
       default:
         System.exit(showUsageInformation("Unrecognized action"));
