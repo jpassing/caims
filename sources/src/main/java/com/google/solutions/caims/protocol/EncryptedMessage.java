@@ -44,8 +44,9 @@ public class EncryptedMessage {
     if (length == 0 || length > maxSize) {
       throw new IOException(
         String.format(
-          "The stream does not contain a valid message (size: %d bytes)",
-          length));
+          "The stream does not contain a valid message (size: %d bytes, available: %d)",
+          length,
+          stream.available()));
     }
 
     return new EncryptedMessage(stream.readNBytes(length));
