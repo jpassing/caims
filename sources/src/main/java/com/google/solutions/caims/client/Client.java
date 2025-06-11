@@ -63,16 +63,16 @@ public class Client {
     }
   }
 
-  public int run() throws IOException, GeneralSecurityException, TokenVerifier.VerificationException {
+  public int run() throws Exception {
     //
     // Get tokens from broker.
     //
     List<RequestToken> tokens = null;
-    while (tokens == null) {
+    while (tokens == null || tokens.isEmpty()) {
       tokens = getTokens();
       if (tokens.isEmpty()) {
         System.err.println(
-          "Waiting for workload instances to become available...");
+          "[INFO] Waiting for workload instances to become available...");
 
         try {
           Thread.sleep(5000);
