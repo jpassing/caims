@@ -44,17 +44,21 @@ public class Broker extends AbstractServer {
     //
     // Register HTTP endpoints.
     //
-    this.mapGetJson("/", () -> handleTokensRequest());
-    this.<Map<RequestToken, EncryptedMessage>, EncryptedMessage>mapPostJson(
+    this.mapGetJson("/", () -> getTokens());
+    this.mapPostJson(
       "/forward",
       new TypeToken<Map<RequestToken, EncryptedMessage>>() {}.getType(),
-      (Map<RequestToken, EncryptedMessage> request) -> handleInferenceRequest(request));
-
+      (Map<RequestToken, EncryptedMessage> request) -> forwardInferenceRequest(request));
   }
 
-  private List<RequestToken> handleTokensRequest() {
+  /**
+   * Take a random sample of registrations and return a token for each. Clients
+   * can then use one or more of these tokens to make requests to the forward-
+   * endpoint.
+   */
+  private List<RequestToken> getTokens() {
     //
-    // Take a random sample of registrations and return a token for each.
+    //
     //
     return this.registrations.stream()
       .sorted(Comparator.comparingDouble(x -> RANDOM.nextInt(32)))
@@ -63,43 +67,57 @@ public class Broker extends AbstractServer {
       .toList();
   }
 
-  private @Nullable EncryptedMessage handleInferenceRequest(
+  /**
+   * Dispatch an encrypted inference requests by forwarding it to an available
+   * workload instance.
+   */
+  private @Nullable EncryptedMessage forwardInferenceRequest(
     @NotNull Map<RequestToken, EncryptedMessage> requests
   )  {
     Preconditions.checkNotNull(requests, "requests");
 
     for (var item : requests.entrySet()) {
+      //
+      // Verify token to ensure the request is legitimate and to find out
+      // which instance it belongs to.
+      //
+      AttestationToken.Payload tokenPayload;
       try {
-        var tokenPayload = item.getKey()
+        tokenPayload = item.getKey()
           .attestationToken()
           .verify(
             this.brokerId.toString(),
             this.requireProductionAttestations);
-
-        var registration = this.registrations.stream()
-          .filter(r ->
-            r.instanceName.equals(tokenPayload.instanceName()) &&
-              r.zone.equals(tokenPayload.instanceZone()) &&
-              r.projectId.equals(tokenPayload.projectId()))
-          .findFirst();
-        if (!registration.isPresent()) {
-          //
-          // This instance is no longer registered, try next.
-          //
-          continue;
-        }
       }
       catch (TokenVerifier.VerificationException e) {
         //
         // Token invalid or expired, try next.
         //
         continue;
-
       }
+
+      //
+      // Verify that the corresponding instance is (still) registered. Instances may come and
+      // go at any time, so it's possible that it's no longer available.
+      //
+      var registration = this.registrations.stream()
+        .filter(r ->
+          r.instanceName.equals(tokenPayload.instanceName()) &&
+            r.zone.equals(tokenPayload.instanceZone()) &&
+            r.projectId.equals(tokenPayload.projectId()))
+        .findFirst();
+      if (!registration.isPresent()) {
+        //
+        // This instance is no longer registered, try next.
+        //
+        continue;
+      }
+
       // TODO: Forward request to instance
     }
 
-    return null;
+    throw new IllegalArgumentException(
+      "None of the requested workload instance are available any more");
   }
 
   void refreshRegistrations(
@@ -129,40 +147,4 @@ public class Broker extends AbstractServer {
     @NotNull String instanceName,
     @NotNull AttestationToken attestationToken
     ) {}
-
-//
-//  public record TokensResponse(
-//    @NotNull List<RequestToken> tokens
-//  ) {}
-//
-//  /**
-//   * Request to the broker.
-//   *
-//   * @param workloadRequests Zero or more workload requests, each targeting a specific workload instance
-//   */
-//  public record Request(
-//    @NotNull List<WorkloadRequest> workloadRequests
-//  ) {}
-//
-//  /**
-//   * Request to a specific workload instance.
-//   *
-//   * @param requestToken Token for the instance.
-//   * @param encryptedMessage E2EE-encrypted message, encoded as base64.
-//   */
-//  public record WorkloadRequest(
-//    @NotNull String requestToken,
-//    @NotNull String encryptedMessage
-//  ) {}
-//
-//  /**
-//   * Response from the broker
-//   *
-//   * @param encryptedResponseMessage E2EE-encrypted response message from the workload instance
-//   * @param requestTokens A new set of requests that the client can use for future requests
-//   */
-//  public record Response(
-//    @Nullable String encryptedResponseMessage,
-//    @NotNull List<String> requestTokens
-//    ) {}
 }

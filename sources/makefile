@@ -49,4 +49,5 @@ broker: broker-image
 		--image=us-docker.pkg.dev/$(PROJECT_ID)/$(REPOSITORY)/broker:latest \
 		--allow-unauthenticated \
 		--region $(REGION) \
+		--network default \
 		--service-account=$(SERVICE_ACCOUNT_NAME)@$(PROJECT_ID).iam.gserviceaccount.com
