@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.security.GeneralSecurityException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -46,19 +47,32 @@ public record AttestationToken(@NotNull String token) {
   }
 
   public record Payload(@NotNull JsonWebToken.Payload jsonPayload) {
+    private @NotNull String gceClaimValue(@NotNull String claim) {
+      if (this.jsonPayload.get("submods") instanceof Map<?, ?> submods &&
+        submods.get("gce") instanceof Map<?, ?> gce &&
+        gce.get(claim) instanceof String instance) {
+        return instance;
+      }
+      else {
+        throw new IllegalStateException(
+          String.format("The token does not contain a %s claim", claim));
+      }
+    }
+
     /**
      * Check if the attested node is in production mode. Debug nodes are
      * accessible to operators and therefore can't be trusted.
      */
     public boolean isProduction() {
-      return this.jsonPayload.get("dbgstat").equals("disabled-since-boot");
+      return this.jsonPayload.get("dbgstat")
+        .equals("disabled-since-boot");
     }
 
     /**
      * Get the token's designated audience.
      */
     public @NotNull String audience() {
-      return (String)this.jsonPayload.getAudience();
+      return (String) this.jsonPayload.getAudience();
     }
 
     /**
@@ -76,6 +90,27 @@ public record AttestationToken(@NotNull String token) {
         throw new TokenVerifier.VerificationException(
           "The attestation token does not contain a request encryption key");
       }
+    }
+
+    /**
+     * Get the name of the attested instance.
+     */
+    public @NotNull String instanceName() {
+      return gceClaimValue("instance_name");
+    }
+
+    /**
+     * Get the zone the attested instance resides in.
+     */
+    public @NotNull String instanceZone() {
+      return gceClaimValue("zone");
+    }
+
+    /**
+     * Get the project the attested instance resides in.
+     */
+    public @NotNull String projectId() {
+      return gceClaimValue("project_id");
     }
   }
 }

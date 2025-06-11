@@ -1,5 +1,6 @@
 package com.google.solutions.caims;
 
+import com.google.api.client.json.GenericJson;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.crypto.tink.hybrid.HybridConfig;
 import com.google.solutions.caims.broker.Broker;
@@ -52,7 +53,10 @@ public class Program {
         // inference requests from the client to workload instances.
         //
         System.out.println("[INFO] Running as broker");
-        var metadata = metadataClient.getInstanceMetadata();
+        var metadata = new GenericJson()
+          .set("projectId", "jpassing-ar-cs-1")
+          .set("numericProjectId", "1"); // TODO: add switch
+        //var metadata = metadataClient.getInstanceMetadata();
 
         var broker = new Broker(
           new Broker.Identifier(metadata.get("numericProjectId")
@@ -67,8 +71,7 @@ public class Program {
         var discoveryDaemon = new DiscoveryDaemon(
           broker,
           GoogleCredentials.getApplicationDefault(),
-          metadata.get("projectId")
-            .toString());
+          metadata.get("projectId").toString());
 
         discoveryDaemon.start();
         broker.start();
