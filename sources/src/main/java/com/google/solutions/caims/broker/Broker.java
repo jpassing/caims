@@ -126,7 +126,10 @@ public class Broker extends AbstractServer {
         registration.get().zone,
         registration.get().projectId));
 
-      System.out.printf("[INFO] Forwarding inference request to %s\n", url);
+      System.out.printf(
+        "[INFO] Forwarding inference request to %s (%d bytes)\n",
+        url,
+        request.encryptedMessage().cipherText().length);
 
       try {
         var response = new NetHttpTransport()
@@ -140,6 +143,10 @@ public class Broker extends AbstractServer {
         return EncryptedMessage.read(new DataInputStream(response.getContent()));
       }
       catch (IOException e) {
+        System.err.printf(
+          "[ERROR] Forwarding inference request failed: %s\n",
+          e.getMessage());
+        e.printStackTrace();
         throw new RuntimeException(e);
       }
     }
