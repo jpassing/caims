@@ -83,15 +83,20 @@ public class Client {
     }
 
     System.out.printf("Received %d tokens from broker\n", tokens.size());
-
-    var keyPair = RequestEncryptionKeyPair.generate();
-
     try (var reader = new BufferedReader(new InputStreamReader(System.in))) {
       while (true) {
         //
+        // Create a local, ephemeral key pair for encrypting messages. We use
+        // each keypair for a single prompt only, that makes it more difficult
+        // for the broker and workload to link two messages as coming from
+        // the same client.
+        //
+        var keyPair = RequestEncryptionKeyPair.generate();
+
+        //
         // Prompt for input.
         //
-        System.out.print("> ");
+        System.out.print("Enter a question> ");
         var prompt = reader.readLine();
         if (prompt.isBlank()) {
           break;
@@ -100,9 +105,8 @@ public class Client {
         //
         // Select a random subset of tokens and prepare a request for each.
         //
-        System.out.println("[INFO] Selecting a random subset of tokens");
-
         var requests = new LinkedList<Broker.WorkloadRequest>();
+        var instances = new LinkedList<String>();
         for (var token : tokens.stream()
           .sorted(Comparator.comparingDouble(x -> RANDOM.nextInt(32)))
           .limit(5)
@@ -112,21 +116,26 @@ public class Client {
           // Each token corresponds to a workload instance. Verify the token
           // and extract the public key of the workload instance.
           //
-          var requestEncryptionKey = token
+          var tokenPayload = token
             .attestationToken()
-            .verify(this.endpoint.url(), !this.debug)
-            .requestEncryptionKey();
+            .verify(this.endpoint.url(), !this.debug);
 
           //
           // Encrypt the prompt for the specific workload instance.
           //
           var message = new Message(prompt, keyPair.publicKey())
-            .encrypt(requestEncryptionKey);
+            .encrypt(tokenPayload.requestEncryptionKey());
+
+          instances.add(tokenPayload.instanceName());
           requests.add(new Broker.WorkloadRequest(token, message));
         }
 
-        var response = forward(requests);
+        System.out.printf("[INFO] Sending request to %s\n", String.join(", ", instances));
 
+        //
+        // Send the batch of requests to the broker.
+        //
+        var response = forward(requests);
         var clearTextResponse = response
           .decrypt(keyPair.privateKey())
           .toString();
