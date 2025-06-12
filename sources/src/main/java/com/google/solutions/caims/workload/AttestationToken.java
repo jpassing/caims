@@ -70,7 +70,9 @@ public record AttestationToken(@NotNull String token) {
 
     if (requireProduction && !payload.isProduction()) {
       throw new TokenVerifier.VerificationException(
-        "The attested node is in debug mode and can't be trusted");
+        String.format(
+          "The attested node '%s' is in debug mode and can't be trusted",
+          payload.instanceName()));
     }
 
     return  payload;
