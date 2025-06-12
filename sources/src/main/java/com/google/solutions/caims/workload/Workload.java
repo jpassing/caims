@@ -1,6 +1,5 @@
 package com.google.solutions.caims.workload;
 
-import com.google.common.base.Preconditions;
 import com.google.solutions.caims.AbstractServer;
 import com.google.solutions.caims.protocol.EncryptedMessage;
 import com.google.solutions.caims.protocol.Message;
@@ -49,12 +48,9 @@ public class Workload extends AbstractServer {
       // Decrypt the request using the server's private key.
       //
       var request = encryptedRequest.decrypt(this.keyPair.privateKey());
-      Preconditions.checkNotNull(
-        request.senderPublicKey(),
-        "The client did not provide a public key");
 
       //
-      // Handle the request, for example by forwarding the request to a vLLM server
+      // Handle the request, for example by forwarding the request to some LLM server
       // that's running in the same container.
       //
       // As an example, we generate a static fake response and send that back to the client,
@@ -64,7 +60,9 @@ public class Workload extends AbstractServer {
         String.format("> %s\nThat's a good question.", request),
         null);
 
-      var encryptedResponse = response.encrypt(request.senderPublicKey());
+      var encryptedResponse = response.encrypt(request
+        .senderPublicKey()
+        .orElseThrow(() -> new IllegalArgumentException("The client did not provide its public key")));
 
       System.out.printf(
         "[INFO] Finished inference request (response size: %d bytes)\n",
@@ -73,7 +71,6 @@ public class Workload extends AbstractServer {
       return encryptedResponse;
     }
     catch (GeneralSecurityException | IOException e) {
-      e.printStackTrace();
       throw new RuntimeException(e);
     }
   }

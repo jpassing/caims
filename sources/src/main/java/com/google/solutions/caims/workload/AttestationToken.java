@@ -14,8 +14,13 @@ import java.util.stream.Collectors;
  * A token attesting the configuration of the TEE and its VM.
  */
 public record AttestationToken(@NotNull String token) {
-  private static final String EXPECTED_ISSUER = "https://confidentialcomputing.googleapis.com";
-  private static final String JWKS_URL = "https://www.googleapis.com/service_accounts/v1/metadata/jwk/signer@confidentialspace-sign.iam.gserviceaccount.com";
+  /** Issuer used by the attestation provider */
+  private static final String ATTESTATION_ISSUER =
+    "https://confidentialcomputing.googleapis.com";
+
+  /** URL to the public keys which attestations can be verified against */
+  private static final String ATTESTATION_JWKS_URL =
+    "https://www.googleapis.com/service_accounts/v1/metadata/jwk/signer@confidentialspace-sign.iam.gserviceaccount.com";
 
   /**
    * Verify the authenticity of an attestation token and extract its claims.
@@ -27,12 +32,16 @@ public record AttestationToken(@NotNull String token) {
     //
     // Perform a default verification on the JWT, which includes checking that
     // the token has been issued by the expected issuer, i.e. the Confidential
-    // Space attestation povider.
+    // Space attestation provider.
+    //
+    // NB. The TokenVerifier class can't extract the JWKS URL from the OIDC
+    //     provider's metadata document automatically, so we explicitly pass
+    //     the JWKS URL.
     //
     var payload = new Payload(TokenVerifier
       .newBuilder()
-      .setCertificatesLocation(JWKS_URL)
-      .setIssuer(EXPECTED_ISSUER)
+      .setCertificatesLocation(ATTESTATION_JWKS_URL)
+      .setIssuer(ATTESTATION_ISSUER)
       .setAudience(expectedAudience)
       .build()
       .verify(this.token)
@@ -66,13 +75,6 @@ public record AttestationToken(@NotNull String token) {
     public boolean isProduction() {
       return this.jsonPayload.get("dbgstat")
         .equals("disabled-since-boot");
-    }
-
-    /**
-     * Get the token's designated audience.
-     */
-    public @NotNull String audience() {
-      return (String) this.jsonPayload.getAudience();
     }
 
     /**

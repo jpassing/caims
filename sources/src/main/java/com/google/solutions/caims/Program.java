@@ -1,6 +1,5 @@
 package com.google.solutions.caims;
 
-import com.google.api.client.json.GenericJson;
 import com.google.api.client.util.GenericData;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.crypto.tink.hybrid.HybridConfig;

@@ -22,7 +22,7 @@ public class RequestEncryptionKeyPair {
    * Key Derivation (KDF): HMAC-SHA256
    * Authenticated Encryption with Associated Data (AEAD): AES-128 GCM
    */
-  private static @NotNull KeyTemplate TEMPLATE
+  private static final @NotNull KeyTemplate TEMPLATE
     = HybridKeyTemplates.ECIES_P256_HKDF_HMAC_SHA256_AES128_GCM;
 
   private final @NotNull PublicKey publicKey;
@@ -41,10 +41,6 @@ public class RequestEncryptionKeyPair {
   public @NotNull PrivateKey privateKey() {
     return privateKey;
   }
-
-  //---------------------------------------------------------------------------
-  // Constructor and factory methods.
-  //---------------------------------------------------------------------------
 
   private RequestEncryptionKeyPair(
     @NotNull PrivateKey privateKey,
@@ -87,11 +83,10 @@ public class RequestEncryptionKeyPair {
     }
 
     /**
-     * Use the public key to encrypt a piece of clear text and,
-     * optionally a piece of associated data.
+     * Use the public key to encrypt a piece of clear text.
      */
-    public @NotNull byte[] encrypt(
-      @NotNull byte[] clearText
+    public byte[] encrypt(
+      byte[] clearText
     ) throws GeneralSecurityException {
       return this.handle
         .getPrimitive(RegistryConfiguration.get(), HybridEncrypt.class)
@@ -101,7 +96,7 @@ public class RequestEncryptionKeyPair {
     /**
      * Serialize key using Tink's native format.
      */
-    @NotNull byte[] toByteArray() throws GeneralSecurityException {
+    byte[] toByteArray() throws GeneralSecurityException {
       return TinkProtoKeysetFormat.serializeKeysetWithoutSecret(this.handle);
     }
 
@@ -170,8 +165,8 @@ public class RequestEncryptionKeyPair {
      * Use the private key to decrypt a piece of clear text and,
      * optionally a piece of associated data.
      */
-    public @NotNull  byte[] decrypt(
-      @NotNull byte[] cipherText
+    public byte[] decrypt(
+      byte[] cipherText
     ) throws GeneralSecurityException {
       return this.handle
         .getPrimitive(RegistryConfiguration.get(), HybridDecrypt.class)

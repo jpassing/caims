@@ -31,6 +31,7 @@ public class RegistrationDaemon extends Thread {
     setDaemon(true);
   }
 
+  @SuppressWarnings("InfiniteLoopStatement")
   @Override
   public void run() {
     //
@@ -54,13 +55,15 @@ public class RegistrationDaemon extends Thread {
           GUEST_ATTRIBUTE_NAMESPACE,
           GUEST_ATTRIBUTE_NAME,
           attestationToken.token());
-
       }
       catch (Exception e) {
         System.err.printf("[ERROR] Server registration failed: %s\n", e.getMessage());
         e.printStackTrace();
       }
 
+      //
+      // Wait a bit and start over.
+      //
       try {
         Thread.sleep(5 * MINUTES);
       }

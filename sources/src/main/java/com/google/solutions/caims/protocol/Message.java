@@ -7,13 +7,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Optional;
 
 /**
  * A clear-text message that is ready to be encrypted for a particular
  * recipient.
  *
- * If the message denotes a request, then the sender is the client and
- * the recipient is the server. If the message denotes a response, the
+ * If the message represents a request, then the sender is the client and
+ * the recipient is the server. If the message represents a response, the
  * roles are reversed.
  *
  * Note that HPKE encryption is unidirectional from sender to recipient.
@@ -26,9 +27,7 @@ import java.security.GeneralSecurityException;
  * associated-data.
  */
 public class Message {
-  /**
-   * Message body, in clear text.
-   */
+  /** Message body, in clear text. */
   private final @NotNull String body;
 
   /**
@@ -50,8 +49,11 @@ public class Message {
     return this.body;
   }
 
-  public RequestEncryptionKeyPair.PublicKey senderPublicKey() {
-    return senderPublicKey;
+  /**
+   * Get the sender's public key.
+   */
+  public @NotNull Optional<RequestEncryptionKeyPair.PublicKey> senderPublicKey() {
+    return Optional.ofNullable(senderPublicKey);
   }
 
   /**
@@ -60,7 +62,6 @@ public class Message {
   public @NotNull EncryptedMessage encrypt(
     @NotNull RequestEncryptionKeyPair.PublicKey recipientPublicKey
   ) throws GeneralSecurityException, IOException {
-
     try (var buffer = new ByteArrayOutputStream())
     {
       try (var stream = new DataOutputStream(buffer)) {

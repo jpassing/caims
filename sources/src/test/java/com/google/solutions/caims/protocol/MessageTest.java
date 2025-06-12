@@ -37,7 +37,7 @@ public class MessageTest {
       .decrypt(recipientKeyPair.privateKey());
 
     assertEquals("Test", decryptedMessage.toString());
-    assertNull(decryptedMessage.senderPublicKey());
+    assertFalse(decryptedMessage.senderPublicKey().isPresent());
   }
 
   @Test
@@ -52,6 +52,6 @@ public class MessageTest {
 
     assertEquals("Test", decryptedMessage.toString());
     assertNotNull(decryptedMessage.senderPublicKey());
-    assertEquals(decryptedMessage.senderPublicKey(), senderKeyPair.publicKey());
+    assertEquals(decryptedMessage.senderPublicKey().get(), senderKeyPair.publicKey());
   }
 }

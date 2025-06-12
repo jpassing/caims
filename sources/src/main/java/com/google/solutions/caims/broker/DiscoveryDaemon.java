@@ -41,6 +41,7 @@ public class DiscoveryDaemon extends Thread {
     setDaemon(true);
   }
 
+  @SuppressWarnings("InfiniteLoopStatement")
   @Override
   public void run() {
     while (true) {
@@ -117,6 +118,9 @@ public class DiscoveryDaemon extends Thread {
         e.printStackTrace();
       }
 
+      //
+      // Wait a bit and start over.
+      //
       try {
         Thread.sleep(20 * 1000);
       }

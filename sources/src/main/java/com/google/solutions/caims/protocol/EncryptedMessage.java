@@ -4,41 +4,38 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
 /**
- * An encrypted message that can only be decrypted by the intended
- * recipient.
+ * A message that has been encrypted by a sender and can only be decrypted by
+ * the intended receiver.
+ * <p>
+ * If the message represents a request, then the sender is the client and
+ * the recipient is the server. If the message represents a response, the
+ * roles are reversed.
+ *
+ * @param cipherText Message body, encrypted.
  */
-public class EncryptedMessage {
-
-  /** Maximum allowed size for a message */
-  private static final int MAX_SIZE = 1024;
-
-  /**
-   * Message body, encrypted.
-   */
-  private final @NotNull byte[] cipherText;
-
-  public EncryptedMessage(@NotNull byte[] cipherText) {
-    this.cipherText = cipherText;
-  }
+public record EncryptedMessage(byte[] cipherText) {
 
   /**
    * Get raw cipher text.
    */
+  @Override
   public byte[] cipherText() {
     return cipherText;
   }
 
+  /**
+   * Decrypt the message using the recipient's private key.
+   */
   public @NotNull Message decrypt(
     @NotNull RequestEncryptionKeyPair.PrivateKey recipientPrivateKey
   ) throws GeneralSecurityException, IOException {
     var clearText = recipientPrivateKey.decrypt(this.cipherText);
 
-    try (var stream = new DataInputStream(new ByteArrayInputStream(clearText)) ){
+    try (var stream = new DataInputStream(new ByteArrayInputStream(clearText))) {
       var body = stream.readUTF();
 
       var senderPublicKey = stream.available() > 0

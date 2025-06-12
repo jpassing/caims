@@ -24,7 +24,10 @@ public class ConfidentialSpace {
   /** Endpoint of the token endpoint */
   private static final String TEE_TOKEN_ENDPOINT = "/v1/token";
 
+  /** Maximum length (in characters) of a nonce */
   private static final int NONCE_LENGTH_MAX = 74;
+
+  /** Minimum length (in characters) of a nonce */
   private static final int NONCE_LENGTH_MIN = 10;
 
   private static final Gson GSON = new GsonBuilder().create();
@@ -43,9 +46,11 @@ public class ConfidentialSpace {
           "that is that the workload server is executed outside a confidential" +
           "space TEE", TEE_SERVER_SOCKET_PATH));
     }
+
     //
     // Java's built-in HTTP client doesn't support sending HTTP requests over a
-    // Unix domain socket, so we need to construct the request manually.
+    // Unix domain socket, so we need to use a plain TCP client to do the HTTP
+    // exchange.
     //
     var address = UnixDomainSocketAddress.of(TEE_SERVER_SOCKET_PATH);
 
@@ -57,7 +62,7 @@ public class ConfidentialSpace {
 
     try (var clientChannel = SocketChannel.open(address)) {
       //
-      // Format a HTTP request.
+      // Format an HTTP request.
       //
       // Use HTTP 1.0 so that we don't have to deal with chunked responses.
       //
@@ -93,7 +98,7 @@ public class ConfidentialSpace {
       var body = Arrays.stream(httpResponse.split("\r\n\r\n"))
         .skip(1)
         .findFirst();
-      if (!body.isPresent() || !body.get().startsWith("ey")) {
+      if (body.isEmpty() || !body.get().startsWith("ey")) {
         System.err.printf("[ERROR] Received empty or unexpected response from TEE server: %s\n", httpResponse);
         throw new ConfidentialSpaceException("Received empty or unexpected response from TEE server");
       }
@@ -115,6 +120,15 @@ public class ConfidentialSpace {
     //
     // To bind the workload server's REK to the attestation, we embed
     // it as a nonce.
+    //
+    // The most efficient way to embed the key would be to take its
+    // uncompressed X and Y values (which are both 32 bytes in size,
+    // translating to 43 characters in Base64) and embed them as two
+    // nonces. However, doing so would break with Tink's notion of
+    // treating keys as opaque blobs that not only contain key material
+    // but also relevant parameters, so we're not doing that here.
+    // Instead, we take the entire Tink key and serialize it, even if
+    // that's less space-efficient.
     //
     // Because nonces have a maximum length that's shorter than the
     // serialized public key, we have to break it into multiple parts.
@@ -166,5 +180,4 @@ public class ConfidentialSpace {
 
     return result.toString();
   }
-
 }

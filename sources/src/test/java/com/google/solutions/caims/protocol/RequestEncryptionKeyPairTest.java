@@ -96,8 +96,7 @@ public class RequestEncryptionKeyPairTest {
   @ParameterizedTest
   @ValueSource(ints = {0, 1, 3})
   public void publicKey_read_whenDataInvalid(int size) throws Exception {
-    try (var buffer = new ByteArrayOutputStream();
-         var stream = new DataInputStream(new ByteArrayInputStream(new byte[size]))) {
+    try (var stream = new DataInputStream(new ByteArrayInputStream(new byte[size]))) {
       assertThrows(
         IOException.class,
         () -> RequestEncryptionKeyPair.PublicKey.read(stream));

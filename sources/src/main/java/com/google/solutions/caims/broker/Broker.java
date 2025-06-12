@@ -11,7 +11,6 @@ import com.google.solutions.caims.AbstractServer;
 import com.google.solutions.caims.protocol.EncryptedMessage;
 import com.google.solutions.caims.workload.AttestationToken;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.security.SecureRandom;
@@ -56,9 +55,6 @@ public class Broker extends AbstractServer {
    * endpoint.
    */
   private List<RequestToken> getTokens() {
-    //
-    //
-    //
     return this.registrations.stream()
       .sorted(Comparator.comparingDouble(x -> RANDOM.nextInt(32)))
       .limit(this.maxRequestTokens)
@@ -70,7 +66,7 @@ public class Broker extends AbstractServer {
    * Dispatch an encrypted inference requests by forwarding it to an available
    * workload instance.
    */
-  private @Nullable WorkloadResponse forwardInferenceRequest(
+  private @NotNull WorkloadResponse forwardInferenceRequest(
     @NotNull List<WorkloadRequest> requests
   )  {
     Preconditions.checkNotNull(requests, "requests");
@@ -108,7 +104,7 @@ public class Broker extends AbstractServer {
             r.zone.equals(tokenPayload.instanceZone()) &&
             r.projectId.equals(tokenPayload.projectId()))
         .findFirst();
-      if (!registration.isPresent()) {
+      if (registration.isEmpty()) {
         //
         // This instance is no longer registered, try next.
         //
@@ -178,6 +174,7 @@ public class Broker extends AbstractServer {
       return this.url;
     }
   }
+
   /**
    * A registered node that is ready to handle requests.
    */
@@ -214,6 +211,7 @@ public class Broker extends AbstractServer {
   }
 
   /**
+   * Response from a workload.
    *
    * @param message Encrypted message, base64-encoded
    */

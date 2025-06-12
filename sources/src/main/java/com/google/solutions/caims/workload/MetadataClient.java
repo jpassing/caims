@@ -12,12 +12,10 @@ import com.google.common.base.Preconditions;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.net.http.HttpClient;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Helper class for interacting with the Compute Engine
- * instance metadata server.
+ * Helper class for interacting with the Compute Engine metadata server.
  */
 public class MetadataClient {
   private static final HttpRequestFactory HTTP_FACTORY = new NetHttpTransport().createRequestFactory();
@@ -58,6 +56,20 @@ public class MetadataClient {
     }
   }
 
+  /**
+   * Get project metadata for the current VM.
+   */
+  public @NotNull GenericData getProjectMetadata() throws IOException {
+    return getMetadata("/computeMetadata/v1/project/");
+  }
+
+  /**
+   * Get instance metadata for the current VM.
+   */
+  public @NotNull GenericData getInstanceMetadata() throws IOException {
+    return getMetadata("/computeMetadata/v1/instance/");
+  }
+
   private @NotNull GenericData getMetadata(
     @NotNull String path
   ) throws IOException {
@@ -85,17 +97,4 @@ public class MetadataClient {
     }
   }
 
-  /**
-   * Get project metadata for the current VM.
-   */
-  public @NotNull GenericData getProjectMetadata() throws IOException {
-    return getMetadata("/computeMetadata/v1/project/");
-  }
-
-  /**
-   * Get instance metadata for the current VM.
-   */
-  public @NotNull GenericData getInstanceMetadata() throws IOException {
-    return getMetadata("/computeMetadata/v1/instance/");
-  }
 }

@@ -6,7 +6,9 @@ import com.google.solutions.caims.protocol.EncryptedMessage;
 import com.sun.net.httpserver.HttpServer;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.lang.reflect.Type;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
@@ -16,10 +18,11 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * Base class for HTTP servers.
+ * Base class for an HTTP server.
+ *
+ * Te class uses the JRE-builtin HTTP server to avoid any additional dependencies.
  */
 public abstract class AbstractServer {
-
   /** Charset used in messages and HTTP responses */
   protected static final @NotNull Charset CHARSET = StandardCharsets.UTF_8;
   private final @NotNull HttpServer server;
@@ -29,7 +32,6 @@ public abstract class AbstractServer {
     int listenPort,
     int threadPoolSize
   ) throws IOException {
-
     //
     // Start an HTTP server and listen for requests.
     //
@@ -42,7 +44,9 @@ public abstract class AbstractServer {
       threadPoolSize);
   }
 
-  /** Register a GET endpoint that returns JSON output */
+  /**
+   * Register a GET endpoint that returns JSON output.
+   * */
   protected <TResponse> void mapGetJson(
     @NotNull String path,
     @NotNull Supplier<Object> handler
@@ -73,14 +77,16 @@ public abstract class AbstractServer {
         catch (Exception e) {
           exchange.sendResponseHeaders(500, 0);
           writer.write("Internal server error");
-          System.err.printf("[ERROR] %s\n", e.getMessage());
+          System.err.printf("[ERROR] %s: %s\n", path, e.getMessage());
           e.printStackTrace();
         }
       }
     });
   }
 
-  /** Register a POST endpoint that receives and returns JSON output */
+  /**
+   * Register a POST endpoint that receives and returns JSON output
+   */
   protected <TRequest, TResponse> void mapPostJson(
     @NotNull String path,
     @NotNull Type requestType,
@@ -121,27 +127,29 @@ public abstract class AbstractServer {
         catch (IllegalArgumentException e) {
           exchange.sendResponseHeaders(400, 0);
           writer.write("Invalid arguments");
-          System.err.printf("[ERROR] %s\n", e.getMessage());
+          System.err.printf("[ERROR] %s: %s\n", path, e.getMessage());
           e.printStackTrace();
         }
         catch (Exception e) {
           exchange.sendResponseHeaders(500, 0);
           writer.write("Internal server error");
-          System.err.printf("[ERROR] %s\n", e.getMessage());
+          System.err.printf("[ERROR] %s: %s\n", path, e.getMessage());
           e.printStackTrace();
         }
       }
     });
   }
 
+  /**
+   * Register a POST endpoint that receives and returns an encrypted
+   * binary message.
+   */
   protected void mapPostEncrypted(
     @NotNull String path,
     @NotNull Function<EncryptedMessage, EncryptedMessage> handler
   ) {
     this.server.createContext(path, exchange -> {
-      try (
-        var writer = new OutputStreamWriter(exchange.getResponseBody(), CHARSET)
-      ) {
+      try (var writer = new OutputStreamWriter(exchange.getResponseBody(), CHARSET)) {
         exchange
           .getResponseHeaders()
           .set("Content-Type", "binary/octet-stream");
@@ -174,13 +182,13 @@ public abstract class AbstractServer {
         catch (IllegalArgumentException e) {
           exchange.sendResponseHeaders(400, 0);
           writer.write("Invalid arguments");
-          System.err.printf("[ERROR] %s\n", e.getMessage());
+          System.err.printf("[ERROR] %s: %s\n", path, e.getMessage());
           e.printStackTrace();
         }
         catch (Exception e) {
           exchange.sendResponseHeaders(500, 0);
           writer.write("Internal server error");
-          System.err.printf("[ERROR] %s\n", e.getMessage());
+          System.err.printf("[ERROR] %s: %s\n", path, e.getMessage());
           e.printStackTrace();
         }
       }
