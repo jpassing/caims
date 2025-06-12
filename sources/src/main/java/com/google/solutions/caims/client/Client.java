@@ -130,7 +130,7 @@ public class Client {
           requests.add(new Broker.WorkloadRequest(token, message));
         }
 
-        System.out.printf("[INFO] Sending request to %s\n", String.join(", ", instances));
+        System.out.printf("[INFO] Sending batch request for %s\n", String.join(", ", instances));
 
         //
         // Send the batch of requests to the broker.

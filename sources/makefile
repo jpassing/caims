@@ -3,7 +3,7 @@ PROJECT_ID := $(shell gcloud config get core/project)
 REGION = asia-southeast1
 ZONE = $(REGION)-a
 SERVICE_ACCOUNT_NAME = cs-sa-1
-VM_NAME = cs-debug
+
 
 #
 # DEBUG targets
@@ -15,7 +15,7 @@ debug-image:
 	
 .PHONY: debug-vm
 debug-vm: debug-image
-	gcloud compute instances create $(VM_NAME) \
+	gcloud compute instances create cs-debug \
 		--confidential-compute-type=SEV \
 		--shielded-secure-boot \
 		--scopes=cloud-platform \
@@ -34,7 +34,30 @@ debug-vm-registration:
 	gcloud compute instances get-guest-attributes $(VM_NAME) \
 		--query-path=workload-server/token \
 		--zone=$(ZONE)
-        
+ 
+
+#
+# Workload targets
+#
+.PHONY: workload-image
+workload-image:
+	docker build -t us-docker.pkg.dev/$(PROJECT_ID)/$(REPOSITORY)/workload . -f workload.dockerfile
+	docker push us-docker.pkg.dev/$(PROJECT_ID)/$(REPOSITORY)/workload:latest
+	
+.PHONY: workload-vm
+workload-vm: workload-image
+	gcloud compute instances create workload \
+		--confidential-compute-type=SEV \
+		--shielded-secure-boot \
+		--scopes=cloud-platform \
+		--zone=$(ZONE) \
+		--maintenance-policy=MIGRATE \
+		--image-project=confidential-space-images \
+		--image-family=confidential-space \
+		--service-account=$(SERVICE_ACCOUNT_NAME)@$(PROJECT_ID).iam.gserviceaccount.com \
+		--metadata="tee-image-reference=us-docker.pkg.dev/$(PROJECT_ID)/$(REPOSITORY)/workload:latest,enable-guest-attributes=TRUE"
+		
+ 
 #
 # Broker targets
 #
