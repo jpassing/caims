@@ -77,9 +77,9 @@ public record AttestationToken(@NotNull String token) {
   }
 
   public record Payload(@NotNull JsonWebToken.Payload jsonPayload) {
-    private @NotNull String gceClaimValue(@NotNull String claim) {
+    private @NotNull String submodClaim(@NotNull String section, @NotNull String claim) {
       if (this.jsonPayload.get("submods") instanceof Map<?, ?> submods &&
-        submods.get("gce") instanceof Map<?, ?> gce &&
+        submods.get(section) instanceof Map<?, ?> gce &&
         gce.get(claim) instanceof String instance) {
         return instance;
       }
@@ -119,21 +119,44 @@ public record AttestationToken(@NotNull String token) {
      * Get the name of the attested instance.
      */
     public @NotNull String instanceName() {
-      return gceClaimValue("instance_name");
+      return submodClaim("gce", "instance_name");
     }
 
     /**
      * Get the zone the attested instance resides in.
      */
     public @NotNull String instanceZone() {
-      return gceClaimValue("zone");
+      return submodClaim("gce", "zone");
     }
 
     /**
      * Get the project the attested instance resides in.
      */
     public @NotNull String projectId() {
-      return gceClaimValue("project_id");
+      return submodClaim("gce", "project_id");
+    }
+
+    /**
+     * Get the name of the approved operating system for the VM.
+     */
+    public @NotNull String operatingSystem() {
+      return this.jsonPayload.get("swname").toString();
+    }
+
+    /**
+     * Get the name of the hardware model.
+     */
+    public @NotNull String hardwareModel() {
+      return this.jsonPayload.get("hwmodel").toString();
+    }
+
+    /**
+     * Get the shortened image digest
+     */
+    public @NotNull String imageDigest() {
+      return submodClaim("container", "image_digest")
+        .substring("sha256:".length())
+        .substring(0, 12);
     }
   }
 }

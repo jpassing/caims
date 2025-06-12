@@ -34,6 +34,7 @@ import com.google.solutions.caims.broker.RequestToken;
 import com.google.solutions.caims.protocol.EncryptedMessage;
 import com.google.solutions.caims.protocol.Message;
 import com.google.solutions.caims.protocol.RequestEncryptionKeyPair;
+import com.google.solutions.caims.workload.AttestationToken;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
@@ -103,7 +104,39 @@ public class Client {
       }
     }
 
-    System.out.printf("Received %d tokens from broker\n", tokens.size());
+    System.out.println("");
+    System.out.println("Your prompts will be served by one of the following workload instances:");
+    System.out.println("");
+    System.out.println("Instance   Zone               Prod  Hardware        OS                 Image");
+    System.out.println("---------- ------------------ ----- --------------- ------------------ ------------");
+
+    //
+    // Verify and inspect the tokens we got.
+    //
+    var workloadInstances = new LinkedList<WorkloadInstance>();
+    for (var token : tokens) {
+      //
+      // Each token corresponds to a workload instance. Verify the token
+      // and extract the public key of the workload instance.
+      //
+      var attestation = token
+        .attestationToken()
+        .verify(this.endpoint.url(), !this.debug);
+
+      System.out.printf(
+        "%-10s %-18s %-5s %-15s %-18s %-12s\n",
+        attestation.instanceName(),
+        attestation.instanceZone(),
+        attestation.isProduction(),
+        attestation.hardwareModel(),
+        attestation.operatingSystem(),
+        attestation.imageDigest());
+
+      workloadInstances.add(new WorkloadInstance(token, attestation));
+    }
+
+    System.out.println("");
+
     try (var reader = new BufferedReader(new InputStreamReader(System.in))) {
       while (true) {
         //
@@ -124,34 +157,22 @@ public class Client {
         }
 
         //
-        // Select a random subset of tokens and prepare a request for each.
+        // Select a random subset of workload instances.
         //
         var requests = new LinkedList<Broker.WorkloadRequest>();
-        var instances = new LinkedList<String>();
-        for (var token : tokens.stream()
+        for (var workloadInstance : workloadInstances.stream()
           .sorted(Comparator.comparingDouble(x -> RANDOM.nextInt(32)))
           .limit(5)
           .toList()
         ) {
           //
-          // Each token corresponds to a workload instance. Verify the token
-          // and extract the public key of the workload instance.
-          //
-          var tokenPayload = token
-            .attestationToken()
-            .verify(this.endpoint.url(), !this.debug);
-
-          //
           // Encrypt the prompt for the specific workload instance.
           //
           var message = new Message(prompt, keyPair.publicKey())
-            .encrypt(tokenPayload.requestEncryptionKey());
+            .encrypt(workloadInstance.attestation.requestEncryptionKey());
 
-          instances.add(tokenPayload.instanceName());
-          requests.add(new Broker.WorkloadRequest(token, message));
+          requests.add(new Broker.WorkloadRequest(workloadInstance.requestToken, message));
         }
-
-        System.out.printf("[INFO] Sending batch request for %s\n", String.join(", ", instances));
 
         //
         // Send the batch of requests to the broker.
@@ -167,4 +188,12 @@ public class Client {
     }
     return 0;
   }
+
+  /**
+   * Captures information about a workload instance that we can send requests to.
+   */
+  private record WorkloadInstance(
+    @NotNull RequestToken requestToken,
+    @NotNull AttestationToken.Payload attestation
+    ) {}
 }
