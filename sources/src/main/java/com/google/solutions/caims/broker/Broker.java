@@ -115,13 +115,15 @@ public class Broker extends AbstractServer {
         continue;
       }
 
-      var workloadInstanceId = new WorkloadInstanceId(tokenPayload.projectId(), tokenPayload.instanceZone(), tokenPayload.instanceName());
       //
       // Verify that the corresponding instance is (still) registered. Instances may come and
       // go at any time, so it's possible that it's no longer available.
       //
       var registration = this.registrations.stream()
-        .filter(r -> r.workloadInstance.equals(workloadInstanceId))
+        .filter(r -> r.workloadInstance.equals(new WorkloadInstanceId(
+            tokenPayload.projectId(),
+            tokenPayload.instanceZone(),
+            tokenPayload.instanceName())))
         .findFirst();
       if (registration.isEmpty()) {
         //
