@@ -20,6 +20,7 @@
 //
 
 package com.google.solutions.caims;
+
 public class UserAgent {
   private UserAgent() {}
 

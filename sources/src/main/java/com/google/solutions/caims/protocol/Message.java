@@ -33,16 +33,16 @@ import java.util.Optional;
 /**
  * A clear-text message that is ready to be encrypted for a particular
  * recipient.
- *
- * If the message represents a request, then the sender is the client and
+ * <br>
+ * If the message represents a request, then the sender is the client, and
  * the recipient is the server. If the message represents a response, the
  * roles are reversed.
- *
+ * <br>
  * Note that HPKE encryption is unidirectional from sender to recipient.
  * To allow the recipient to return an encrypted response, HPKE allows
  * the recipient to export a derived key (see RFC9180 5.3.). However, this
  * export functionality isn't implemented in Tink-Java, so we don't use it here.
- *
+ * <br>
  * Instead, we re-initiate HPKE for the return path using the client's
  * public key. This key is ephemeral and passed to the recipient as
  * associated-data.

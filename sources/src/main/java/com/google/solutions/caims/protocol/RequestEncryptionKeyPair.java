@@ -39,9 +39,11 @@ public class RequestEncryptionKeyPair {
   /**
    * Key type to use for hybrid encryption.
    *
-   * Key encapsulation (KEM): Diffie-Hellman using P-256 curve
-   * Key Derivation (KDF): HMAC-SHA256
-   * Authenticated Encryption with Associated Data (AEAD): AES-128 GCM
+   * <ul>
+   *   <li>Key encapsulation (KEM): Diffie-Hellman using P-256 curve</li>
+   *   <li>Key Derivation (KDF): HMAC-SHA256</li>
+   *   <li>Authenticated Encryption with Associated Data (AEAD): AES-128 GCM</li>
+   * </ul>
    */
   private static final @NotNull KeyTemplate TEMPLATE
     = HybridKeyTemplates.ECIES_P256_HKDF_HMAC_SHA256_AES128_GCM;

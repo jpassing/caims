@@ -41,7 +41,9 @@ import java.util.Set;
 
 public class Broker extends AbstractServer {
   private static final SecureRandom RANDOM = new SecureRandom();
-  private final @NotNull Broker.Endpoint brokerId;
+
+  /** Public endpoint of this broker */
+  private final @NotNull Broker.Endpoint endpoint;
 
   /** Current set of registrations, continuously updated by the daemon */
   private volatile Set<Registration> registrations = Set.of();
@@ -50,14 +52,14 @@ public class Broker extends AbstractServer {
   private final int maxRequestTokens;
 
   public Broker(
-    @NotNull Broker.Endpoint brokerId,
+    @NotNull Broker.Endpoint endpoint,
     int listenPort,
     int threadPoolSize,
     int maxRequestTokens
   ) throws IOException {
     super(listenPort, threadPoolSize);
 
-    this.brokerId = brokerId;
+    this.endpoint = endpoint;
     this.maxRequestTokens = maxRequestTokens;
 
     //
@@ -105,7 +107,7 @@ public class Broker extends AbstractServer {
         tokenPayload = request.requestToken()
           .attestationToken()
           .verify(
-            this.brokerId.toString(),
+            this.endpoint.toString(),
             false);
       }
       catch (TokenVerifier.VerificationException e) {
@@ -116,8 +118,8 @@ public class Broker extends AbstractServer {
       }
 
       //
-      // Verify that the corresponding instance is (still) registered. Instances may come and
-      // go at any time, so it's possible that it's no longer available.
+      // Verify that the corresponding instance is (still) registered. Instances
+      // may come and go at any time, so it's possible that it's no longer available.
       //
       var registration = this.registrations.stream()
         .filter(r -> r.workloadInstance.equals(new WorkloadInstanceId(
@@ -172,6 +174,9 @@ public class Broker extends AbstractServer {
       "None of the requested workload instance are available any more");
   }
 
+  /**
+   * Replace registrations with the results of a recent discovery.
+   */
   void refreshRegistrations(
     @NotNull Set<Registration> registrations
   ) {

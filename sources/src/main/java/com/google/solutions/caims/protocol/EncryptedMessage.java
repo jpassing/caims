@@ -32,7 +32,7 @@ import java.security.GeneralSecurityException;
  * A message that has been encrypted by a sender and can only be decrypted by
  * the intended receiver.
  * <p>
- * If the message represents a request, then the sender is the client and
+ * If the message represents a request, then the sender is the client, and
  * the recipient is the server. If the message represents a response, the
  * roles are reversed.
  *

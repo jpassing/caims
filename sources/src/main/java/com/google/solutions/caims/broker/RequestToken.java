@@ -26,18 +26,26 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * Token that entitles a client to perform a request to a specific workload instance.
- *
+ * <br>
  * Instead of letting the broker mint a new kind of token, we're reusing the
  * workload instance's attestation token as request token. This has two advantages:
  *
- * 1.  Assuming the workload image is public (which it should be), a user can
+ * <ol>
+ *   <li>
+ *     Assuming the workload image is public (which it should be), a user can
  *     convince themselves that the attestation token incorporates no information
  *     that would identify the user.
- * 2.  The attestation token has a limited lifetime (1h) and is a JWT, and is
+ *   </li>
+ *   <li>
+ *     The attestation token has a limited lifetime (1h) and is a JWT, and is
  *     can be verified using standard means.
- * 3.  Even if we let the broker mint a new kind of token, the broker would still
+ *   </li>
+ *   <li>
+ *     Even if we let the broker mint a new kind of token, the broker would still
  *     have to present the attestation token to the client so that the client can
  *     verify its claims.
+ *   </li>
+ * </ol>
  *
  * @param attestationToken attestation token of the workload instance.
  */

@@ -37,7 +37,7 @@ import java.util.HashSet;
 import java.util.Optional;
 
 /**
- * Daemon that discovers workload servers.
+ * Daemon that discovers workload servers and updates the {@see Broker}.
  */
 public class DiscoveryDaemon extends Thread {
   private  final @NotNull Broker broker;

@@ -39,6 +39,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Contains the application's main entry point.
+ * <br>
+ * The application can be run in 3 different modes, client, broker, and workload.
+ */
 public class Program {
   static {
     //

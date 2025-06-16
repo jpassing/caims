@@ -59,32 +59,6 @@ public class Client {
     this.debug = debug;
   }
 
-  private List<RequestToken> getTokens() throws IOException {
-    var response = HTTP_FACTORY
-      .buildGetRequest(new GenericUrl(this.endpoint.url()))
-      .setParser(new JsonObjectParser(GSON_FACTORY))
-      .execute();
-
-    try (var reader = new InputStreamReader(response.getContent(), response.getContentCharset())) {
-      return GSON.fromJson(reader, new TypeToken<List<RequestToken>>() {}.getType());
-    }
-  }
-
-  private EncryptedMessage forward(List<Broker.WorkloadRequest> requests) throws IOException {
-    var response = HTTP_FACTORY
-      .buildPostRequest(
-        new GenericUrl(this.endpoint.url() + "forward"),
-        new ByteArrayContent("application/json", GSON.toJson(requests).getBytes(StandardCharsets.UTF_8)))
-      .setParser(new JsonObjectParser(GSON_FACTORY))
-      .execute();
-
-    try (var reader = new InputStreamReader(response.getContent(), response.getContentCharset())) {
-      return GSON
-        .fromJson(reader, Broker.WorkloadResponse.class)
-        .toEncryptedMessage();
-    }
-  }
-
   public int run() throws Exception {
     //
     // Get tokens from broker.
@@ -104,9 +78,9 @@ public class Client {
       }
     }
 
-    System.out.println("");
+    System.out.println();
     System.out.println("Your prompts will be served by one of the following workload instances:");
-    System.out.println("");
+    System.out.println();
     System.out.println("Instance   Zone               Prod  Hardware        OS                 Image");
     System.out.println("---------- ------------------ ----- --------------- ------------------ ------------");
 
@@ -135,7 +109,7 @@ public class Client {
       workloadInstances.add(new WorkloadInstance(token, attestation));
     }
 
-    System.out.println("");
+    System.out.println();
 
     try (var reader = new BufferedReader(new InputStreamReader(System.in))) {
       while (true) {
@@ -187,6 +161,32 @@ public class Client {
       }
     }
     return 0;
+  }
+
+  private List<RequestToken> getTokens() throws IOException {
+    var response = HTTP_FACTORY
+      .buildGetRequest(new GenericUrl(this.endpoint.url()))
+      .setParser(new JsonObjectParser(GSON_FACTORY))
+      .execute();
+
+    try (var reader = new InputStreamReader(response.getContent(), response.getContentCharset())) {
+      return GSON.fromJson(reader, new TypeToken<List<RequestToken>>() {}.getType());
+    }
+  }
+
+  private EncryptedMessage forward(List<Broker.WorkloadRequest> requests) throws IOException {
+    var response = HTTP_FACTORY
+      .buildPostRequest(
+        new GenericUrl(this.endpoint.url() + "forward"),
+        new ByteArrayContent("application/json", GSON.toJson(requests).getBytes(StandardCharsets.UTF_8)))
+      .setParser(new JsonObjectParser(GSON_FACTORY))
+      .execute();
+
+    try (var reader = new InputStreamReader(response.getContent(), response.getContentCharset())) {
+      return GSON
+        .fromJson(reader, Broker.WorkloadResponse.class)
+        .toEncryptedMessage();
+    }
   }
 
   /**

@@ -39,9 +39,10 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * Base class for an HTTP server.
- *
- * Te class uses the JRE-builtin HTTP server to avoid any additional dependencies.
+ * Base class for HTTP servers.
+ * <br>
+ * To avoid additional dependencies, the class uses the JRE-builtin
+ * HTTP server.
  */
 public abstract class AbstractServer {
   /** Charset used in messages and HTTP responses */
@@ -67,7 +68,7 @@ public abstract class AbstractServer {
 
   /**
    * Register a GET endpoint that returns JSON output.
-   * */
+   */
   protected <TResponse> void mapGetJson(
     @NotNull String path,
     @NotNull Supplier<Object> handler
