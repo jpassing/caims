@@ -113,11 +113,12 @@ public class DiscoveryDaemon extends Thread {
               .get());
 
             var registration = new Broker.Registration(
-              this.projectId,
-              zoneId,
-              instance.getName(),
+              new WorkloadInstanceId(
+                this.projectId,
+                zoneId,
+                instance.getName()),
               attestationToken);
-            System.out.printf("[INFO] Discovered workload on %s\n", registration.instanceName());
+            System.out.printf("[INFO] Discovered workload instance %s\n", registration.workloadInstance());
             registrations.add(registration);
           }
           catch (Exception e) {

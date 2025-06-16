@@ -115,15 +115,13 @@ public class Broker extends AbstractServer {
         continue;
       }
 
+      var workloadInstanceId = new WorkloadInstanceId(tokenPayload.projectId(), tokenPayload.instanceZone(), tokenPayload.instanceName());
       //
       // Verify that the corresponding instance is (still) registered. Instances may come and
       // go at any time, so it's possible that it's no longer available.
       //
       var registration = this.registrations.stream()
-        .filter(r ->
-          r.instanceName.equals(tokenPayload.instanceName()) &&
-            r.zone.equals(tokenPayload.instanceZone()) &&
-            r.projectId.equals(tokenPayload.projectId()))
+        .filter(r -> r.workloadInstance.equals(workloadInstanceId))
         .findFirst();
       if (registration.isEmpty()) {
         //
@@ -137,9 +135,9 @@ public class Broker extends AbstractServer {
       //
       var url = new GenericUrl(String.format(
         "http://%s.%s.c.%s.internal:8080/",
-        registration.get().instanceName,
-        registration.get().zone,
-        registration.get().projectId));
+        registration.get().workloadInstance.instanceName(),
+        registration.get().workloadInstance.zone(),
+        registration.get().workloadInstance.projectId()));
 
       System.out.printf(
         "[INFO] Forwarding inference request to %s (%d bytes)\n",
@@ -200,9 +198,7 @@ public class Broker extends AbstractServer {
    * A registered node that is ready to handle requests.
    */
   public record Registration(
-    @NotNull String projectId,
-    @NotNull String zone,
-    @NotNull String instanceName,
+    @NotNull WorkloadInstanceId workloadInstance,
     @NotNull AttestationToken attestationToken
     ) {}
 
