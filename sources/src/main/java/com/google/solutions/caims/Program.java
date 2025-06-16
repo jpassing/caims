@@ -109,12 +109,6 @@ public class Program {
     var projectMetadata = metadataClient.getProjectMetadata();
     var instanceMetadata = metadataClient.getInstanceMetadata();
 
-    //var projectMetadata = new GenericJson()
-    //  .set("projectId", "jpassing-ar-cs-1")
-    //  .set("numericProjectId", "1"); // TODO: add switch
-    //var instanceMetadata = new GenericJson()
-    //  .set("zone", "/asia-southeast1-a"); // TODO: add switch
-
     var server = new Workload(8080, 10);
     var daemon = new RegistrationDaemon(
       getBrokerEndpoint(projectMetadata, instanceMetadata),
@@ -137,12 +131,6 @@ public class Program {
     var metadataClient = new MetadataClient();
     var projectMetadata = metadataClient.getProjectMetadata();
     var instanceMetadata = metadataClient.getInstanceMetadata();
-
-    //var projectMetadata = new GenericJson()
-    //  .set("projectId", "jpassing-ar-cs-1")
-    //  .set("numericProjectId", "1"); // TODO: add switch
-    //var instanceMetadata = new GenericJson()
-    //  .set("zone", "/asia-southeast1-a"); // TODO: add switch
 
     var broker = new Broker(
       getBrokerEndpoint(projectMetadata, instanceMetadata),
